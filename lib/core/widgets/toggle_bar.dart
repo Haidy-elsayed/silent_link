@@ -50,7 +50,7 @@ class AuthToggleBar extends StatelessWidget {
                     child: Text(
                       "Sign In",
                       style: TextStyle(
-                        color: isSignIn ? AppColors.black : AppColors.primary,
+                        color: isSignIn ? AppColors.background : AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -74,7 +74,7 @@ class AuthToggleBar extends StatelessWidget {
                     child: Text(
                       "Sign Up",
                       style: TextStyle(
-                        color: !isSignIn ? AppColors.black : AppColors.primary,
+                        color: !isSignIn ? AppColors.background : AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),

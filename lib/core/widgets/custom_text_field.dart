@@ -4,7 +4,7 @@ import '../constants/colors.dart';
 
 class CustomTextField extends StatelessWidget {
   final String hint;
-  final IconData prefixIcon;
+  final IconData? prefixIcon;
   final IconData? suffixIcon;
   final VoidCallback? onSuffixPressed;
   final bool obscure;
@@ -16,10 +16,14 @@ class CustomTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
 
+  // الإضافات الجديدة لتدعم تاريخ الميلاد والـ Clickable fields
+  final VoidCallback? onTap;
+  final bool readOnly;
+
   const CustomTextField({
     super.key,
     required this.hint,
-    required this.prefixIcon,
+    this.prefixIcon,
     this.suffixIcon,
     this.onSuffixPressed,
     this.obscure = false,
@@ -29,6 +33,8 @@ class CustomTextField extends StatelessWidget {
     this.nextFocus,
     this.textInputAction,
     this.keyboardType,
+    this.onTap,
+    this.readOnly = false, // القيمة الافتراضية "غير مفعل" ليظل يعمل كحقل كتابة عادي
   });
 
   @override
@@ -42,11 +48,9 @@ class CustomTextField extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: AppColors.secondary.withOpacity(0.7),
-             // لون الشادو
               blurRadius: 2,
-              // مدى التمويه
               spreadRadius: 0,
-              offset: const Offset(0, 5), // إزاحة الشادو
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -57,6 +61,8 @@ class CustomTextField extends StatelessWidget {
           focusNode: focusNode,
           keyboardType: keyboardType,
           textInputAction: textInputAction,
+          readOnly: readOnly, // تفعيل خاصية القراءة فقط عند الحاجة
+          onTap: onTap,       // استدعاء الأكشن عند الضغط
           autovalidateMode: AutovalidateMode.onUserInteraction,
           onFieldSubmitted: (_) {
             if (nextFocus != null) {
@@ -65,7 +71,8 @@ class CustomTextField extends StatelessWidget {
           },
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(prefixIcon, color: AppColors.black),
+            // التحقق إذا كانت الأيقونة موجودة أم لا
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.black) : null,
             suffixIcon: suffixIcon == null
                 ? null
                 : IconButton(
@@ -73,9 +80,8 @@ class CustomTextField extends StatelessWidget {
               onPressed: onSuffixPressed,
             ),
             filled: true,
-            fillColor: Colors.transparent, // خليها شفاف عشان يظهر الشادو
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            fillColor: Colors.transparent,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: _border(),
             enabledBorder: _border(),
             focusedBorder: _border(width: 1.5),

@@ -20,8 +20,9 @@ class PermissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      // تم تغيير height لـ constraints ليكون مرن
+      constraints: const BoxConstraints(minHeight: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
         color: isGranted
             ? AppColors.primaryDark.withOpacity(0.85)
@@ -36,14 +37,13 @@ class PermissionCard extends StatelessWidget {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 36, color: AppColors.background),
-
           const SizedBox(width: 16),
-
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // يجعل العمود يأخذ مساحة المحتوى فقط
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -67,15 +67,14 @@ class PermissionCard extends StatelessWidget {
               ],
             ),
           ),
-
-          const SizedBox(width: 12),
-
+          const SizedBox(width: 8), // تقليل المسافة قليلاً لتوفير مساحة
           _AllowButton(isGranted: isGranted, onPressed: onAllow),
         ],
       ),
     );
   }
 }
+
 
 class _AllowButton extends StatelessWidget {
   final bool isGranted;
@@ -97,12 +96,13 @@ class _AllowButton extends StatelessWidget {
         ],
       ),
       child: SizedBox(
-        width: 95,
-        height: 34,
+        width: 100, // زيادة العرض قليلاً لتجنب ضيق النص داخل الزر
+        height: 36,
         child: ElevatedButton(
           onPressed: isGranted ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: isGranted ? Colors.white : AppColors.background,
+            disabledBackgroundColor: Colors.white.withOpacity(0.8),
             elevation: 0,
             padding: EdgeInsets.zero,
             shape: RoundedRectangleBorder(
@@ -117,12 +117,12 @@ class _AllowButton extends StatelessWidget {
                 style: TextStyle(
                   color: isGranted ? AppColors.secondary : AppColors.primary,
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                  fontSize: 14,
                 ),
               ),
               if (isGranted) ...[
-                const SizedBox(width: 4),
-                const Icon(Icons.check, size: 16, color: AppColors.primaryDark),
+                const SizedBox(width: 2),
+                const Icon(Icons.check, size: 14, color: AppColors.primaryDark),
               ],
             ],
           ),

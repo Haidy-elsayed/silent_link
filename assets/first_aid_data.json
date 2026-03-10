@@ -1,0 +1,250 @@
+{
+  "cases":[
+
+    {
+      "keywords":["burn","حرق","burned","fire burn","scald","مياه ساخنة","حروق"],
+      "response":"Cool the burn with running water for 20 minutes. Remove tight items. Cover with sterile dressing."
+    },
+
+    {
+      "keywords":["severe burn","حرق شديد","third degree burn"],
+      "response":"Call emergency services immediately. Cover burn with clean cloth. Do not apply creams."
+    },
+
+    {
+      "keywords":["cut","جرح","bleeding","نزيف","wound","جرح مفتوح"],
+      "response":"Apply firm pressure with a clean cloth. Elevate the injured area. Seek medical help if bleeding continues."
+    },
+
+    {
+      "keywords":["deep cut","جرح عميق"],
+      "response":"Apply direct pressure. Cover with sterile bandage. Seek urgent medical care."
+    },
+
+    {
+      "keywords":["choking","اختناق","can't breathe","شرق","انسداد الحلق"],
+      "response":"Give 5 back blows then 5 abdominal thrusts. Repeat until the object is removed."
+    },
+
+    {
+      "keywords":["infant choking","اختناق طفل","baby choking"],
+      "response":"Give 5 back blows then 5 chest thrusts for infants."
+    },
+
+    {
+      "keywords":["fainting","اغماء","dizzy","دوخة","unconscious"],
+      "response":"Lay the person down and raise their legs. Loosen tight clothing and check breathing."
+    },
+
+    {
+      "keywords":["heart attack","ازمة قلبية","chest pain","الم صدر","cardiac"],
+      "response":"Call emergency immediately. Help the person sit calmly. Give aspirin if available."
+    },
+
+    {
+      "keywords":["stroke","سكتة دماغية","face droop","weak arm"],
+      "response":"Call emergency services immediately. Note the time symptoms started."
+    },
+
+    {
+      "keywords":["electric shock","صعق كهربائي","electricity"],
+      "response":"Turn off the power source. Do not touch the victim until electricity is off."
+    },
+
+    {
+      "keywords":["snake bite","لدغة ثعبان"],
+      "response":"Keep the victim calm. Immobilize the limb. Seek medical help immediately."
+    },
+
+    {
+      "keywords":["dog bite","عضة كلب","animal bite","عضة حيوان"],
+      "response":"Wash wound with soap and water. Apply antiseptic and seek medical care."
+    },
+
+    {
+      "keywords":["nose bleed","نزيف الانف","epistaxis"],
+      "response":"Sit upright and lean forward. Pinch the nose for 10 minutes."
+    },
+
+    {
+      "keywords":["fracture","كسر","broken bone"],
+      "response":"Immobilize the injured limb. Apply ice and seek medical care."
+    },
+
+    {
+      "keywords":["sprain","التواء","ankle twist"],
+      "response":"Rest the joint. Apply ice, compression, and elevation."
+    },
+
+    {
+      "keywords":["poisoning","تسمم","toxic","سم"],
+      "response":"Call poison control immediately. Do not induce vomiting unless instructed."
+    },
+
+    {
+      "keywords":["food poisoning","تسمم غذائي"],
+      "response":"Drink fluids to prevent dehydration and rest."
+    },
+
+    {
+      "keywords":["allergic reaction","حساسية","allergy"],
+      "response":"Remove allergen if possible. Give antihistamine if available."
+    },
+
+    {
+      "keywords":["anaphylaxis","صدمة تحسسية"],
+      "response":"Use epinephrine auto-injector immediately and call emergency services."
+    },
+
+    {
+      "keywords":["heat stroke","ضربة شمس"],
+      "response":"Move to a cool place. Remove excess clothing and cool the body."
+    },
+
+    {
+      "keywords":["heat exhaustion","اجهاد حراري"],
+      "response":"Rest in a cool area and drink water slowly."
+    },
+
+    {
+      "keywords":["hypothermia","انخفاض حرارة الجسم"],
+      "response":"Move to warm place and warm the person gradually."
+    },
+
+    {
+      "keywords":["drowning","غرق"],
+      "response":"Remove person from water safely. Check breathing and start CPR if needed."
+    },
+
+    {
+      "keywords":["seizure","تشنج","صرع"],
+      "response":"Protect the head. Do not restrain the person. Turn to side after seizure."
+    },
+
+    {
+      "keywords":["asthma attack","نوبة ربو"],
+      "response":"Help the person sit upright and use inhaler if available."
+    },
+
+    {
+      "keywords":["low blood sugar","هبوط السكر","hypoglycemia"],
+      "response":"Give sugary food or drink if the person is conscious."
+    },
+
+    {
+      "keywords":["high blood sugar","ارتفاع السكر"],
+      "response":"Encourage hydration and seek medical help."
+    },
+
+    {
+      "keywords":["eye injury","اصابة العين"],
+      "response":"Avoid rubbing the eye. Rinse with clean water if chemical exposure."
+    },
+
+    {
+      "keywords":["chemical burn","حرق كيميائي"],
+      "response":"Flush the area with running water for at least 20 minutes."
+    },
+
+    {
+      "keywords":["insect sting","لدغة حشرة"],
+      "response":"Remove stinger if present and apply cold pack."
+    },
+
+    {
+      "keywords":["bee sting","لدغة نحلة"],
+      "response":"Remove the stinger and apply cold compress."
+    },
+
+    {
+      "keywords":["jellyfish sting","لسعة قنديل البحر"],
+      "response":"Rinse with seawater and remove tentacles carefully."
+    },
+
+    {
+      "keywords":["head injury","اصابة الرأس"],
+      "response":"Apply cold pack and monitor symptoms."
+    },
+
+    {
+      "keywords":["concussion","ارتجاج"],
+      "response":"Allow rest and monitor for confusion or vomiting."
+    },
+
+    {
+      "keywords":["spinal injury","اصابة العمود الفقري"],
+      "response":"Keep head and neck stable and call emergency services."
+    },
+
+    {
+      "keywords":["tooth knocked out","خلع سن"],
+      "response":"Place tooth in milk and seek dental care immediately."
+    },
+
+    {
+      "keywords":["ear bleeding","نزيف الاذن"],
+      "response":"Cover lightly with sterile dressing and seek medical care."
+    },
+
+    {
+      "keywords":["glass cut","جرح زجاج"],
+      "response":"Remove visible debris carefully and bandage wound."
+    },
+
+    {
+      "keywords":["vomiting","قيء"],
+      "response":"Encourage small sips of water and rest."
+    },
+
+    {
+      "keywords":["diarrhea","اسهال"],
+      "response":"Drink oral rehydration fluids to prevent dehydration."
+    },
+
+    {
+      "keywords":["dehydration","جفاف"],
+      "response":"Drink water or electrolyte solution."
+    },
+
+    {
+      "keywords":["fever","حمى"],
+      "response":"Rest and drink fluids. Use fever medicine if needed."
+    },
+
+    {
+      "keywords":["sunburn","حروق الشمس"],
+      "response":"Cool the skin and apply soothing lotion."
+    },
+
+    {
+      "keywords":["blister","فقاعة جلد"],
+      "response":"Do not pop the blister. Cover with sterile bandage."
+    },
+
+    {
+      "keywords":["shock","صدمة"],
+      "response":"Lay the person down, elevate legs and keep warm."
+    },
+
+    {
+      "keywords":["panic attack","نوبة هلع"],
+      "response":"Encourage slow breathing and reassure the person."
+    },
+
+    {
+      "keywords":["hyperventilation","تنفس سريع"],
+      "response":"Encourage slow deep breathing."
+    },
+
+    {
+      "keywords":["child fever","حمى طفل"],
+      "response":"Remove excess clothing and seek medical advice."
+    },
+
+    {
+      "keywords":["pregnant faint","اغماء حامل"],
+      "response":"Lay the person on the left side and ensure fresh air."
+    }
+
+  ]
+}

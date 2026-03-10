@@ -22,25 +22,25 @@ class SocialButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // فيسبوك
-        GestureDetector(
+       /** GestureDetector(
           onTap: () => _launchURL('https://www.facebook.com'),
           child: Icon(Icons.facebook, color: Colors.blue, size: iconSize),
-        ),
+        ),**/
 
-        const SizedBox(width: 15),
+        //const SizedBox(width: 15),
 
         // جوجل (باستخدام الصورة من الـ Assets)
         GestureDetector(
           onTap: () => _launchURL('https://www.google.com'),
           child: Image.asset(
-            'assets/icons/Google.png', // تأكدي من المسار والاسم صح
-            width:25.0,
+            'assets/icons/Google.png', // google
+            width:23.0,
             height: iconSize,
             fit: BoxFit.contain,
           ),
         ),
 
-        const SizedBox(width: 15),
+        const SizedBox(width: 10),
 
         // أبل
         GestureDetector(

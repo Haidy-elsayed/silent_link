@@ -39,7 +39,7 @@ class PrimaryButton extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                color: AppColors.black,
+                color: AppColors.background,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

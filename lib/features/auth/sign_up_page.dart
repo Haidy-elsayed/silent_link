@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:silent_link/features/auth/presentation/widgets/social_buttons.dart';
 import 'package:silent_link/features/auth/sign_in_page.dart';
@@ -17,31 +16,33 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  bool obscure = true;
-
+  // 1. إدارة الحالة (UI Logic)
+  bool _obscure = true;
+  bool _obscureConfirm = true;
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController  = TextEditingController();
+  // 2. التحكم في الحقول (Controllers)
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passController  = TextEditingController();
+  final _passController = TextEditingController();
+  final _confirmPassController = TextEditingController();
+  final _dobController = TextEditingController();
 
-  final _nameFocus  = FocusNode();
-  final _emailFocus = FocusNode();
-  final _phoneFocus = FocusNode();
-  final _passFocus  = FocusNode();
+  // 3. تخزين القيم المختارة (Data)
+  String? _selectedCountry;
+  String? _selectedGender;
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passController.dispose();
-
-    _nameFocus.dispose();
-    _emailFocus.dispose();
-    _phoneFocus.dispose();
-    _passFocus.dispose();
+    _confirmPassController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
@@ -55,152 +56,214 @@ class _SignUpPageState extends State<SignUpPage> {
         leading: const BackButton(color: AppColors.primary),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                const Text(
-                  "Create Your New Account",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Sign Up With The Following Method",
-                  style: TextStyle(fontSize: 16, color: AppColors.black),
-                ),
-                const SizedBox(height: 40),
-
+                _buildHeader(),
+                const SizedBox(height: 30),
                 AuthToggleBar(
                   isSignIn: false,
-                  onToggle: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignInPage()),
-                    );
-                  },
+                  onToggle: () => Navigator.pushReplacement(
+                      context, MaterialPageRoute(builder: (_) => const SignInPage())),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
 
+                // --- الحقول النصية (تستخدم الـ CustomTextField الخاص بك) ---
                 CustomTextField(
-                  hint: "Enter Username",
+                  hint: "First Name",
                   prefixIcon: Icons.person_outline,
-                  controller: _nameController,
-                  focusNode: _nameFocus,
-                  nextFocus: _emailFocus,
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return "Username is required";
-                    if (v.length < 3) return "At least 3 characters";
-                    return null;
-                  },
+                  controller: _firstNameController,
+                  validator: (v) => v!.isEmpty ? "First name is required" : null,
                 ),
-                const SizedBox(height: 10),
-
+                CustomTextField(
+                  hint: "Last Name",
+                  prefixIcon: Icons.person_outline,
+                  controller: _lastNameController,
+                  validator: (v) => v!.isEmpty ? "Last name is required" : null,
+                ),
                 CustomTextField(
                   hint: "Enter Email",
                   prefixIcon: Icons.email_outlined,
                   controller: _emailController,
-                  focusNode: _emailFocus,
-                  nextFocus: _phoneFocus,
                   keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return "Email is required";
-                    if (!v.contains("@")) return "Enter a valid email";
-                    return null;
-                  },
+                  validator: (v) => (v == null || !v.contains("@")) ? "Invalid email" : null,
                 ),
-                const SizedBox(height: 10),
-
                 CustomTextField(
                   hint: "Phone Number",
                   prefixIcon: Icons.phone_outlined,
                   controller: _phoneController,
-                  focusNode: _phoneFocus,
-                  nextFocus: _passFocus,
                   keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return "Phone is required";
-                    if (v.length < 10) return "Invalid phone number";
-                    return null;
-                  },
+                  validator: (v) => v!.isEmpty ? "Phone is required" : null,
                 ),
-                const SizedBox(height: 10),
-
                 CustomTextField(
                   hint: "Create Password",
                   prefixIcon: Icons.lock_outline,
                   controller: _passController,
-                  focusNode: _passFocus,
-                  obscure: obscure,
-                  textInputAction: TextInputAction.done,
-                  suffixIcon: obscure ? Icons.visibility_off : Icons.visibility,
-                  onSuffixPressed: () => setState(() => obscure = !obscure),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return "Password is required";
-                    if (v.length < 6) return "Minimum 6 characters";
-                    return null;
-                  },
+                  obscure: _obscure,
+                  suffixIcon: _obscure ? Icons.visibility_off : Icons.visibility,
+                  onSuffixPressed: () => setState(() => _obscure = !_obscure),
+                  validator: (v) => v!.length < 6 ? "Minimum 6 characters" : null,
+                ),
+                CustomTextField(
+                  hint: "Confirm Password",
+                  prefixIcon: Icons.lock_reset,
+                  controller: _confirmPassController,
+                  obscure: _obscureConfirm,
+                  suffixIcon: _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                  onSuffixPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  validator: (v) => v != _passController.text ? "Passwords don't match" : null,
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
-                PrimaryButton(
-                  text: "Sign Up",
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      // 1. حفظ المستخدم كمسجل دخول
-                      await AppStateManager.setLoggedIn();
 
-                      // 2. الانتقال للـ HomePage وإزالة كل الصفحات السابقة
-                      if (!mounted) return;
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomePage()),
-                            (route) => false,
-                      );
+                _buildFieldLabel("Date Of Birth"),
+                CustomTextField(
+                  hint: "YYYY-MM-DD",
+                  controller: _dobController,
+                  readOnly: true,
+                  prefixIcon: Icons.calendar_month_outlined,
+                  validator: (v) => v!.isEmpty ? "Please select birth date" : null,
+                  onTap: () async {
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime(2000),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      _dobController.text = "${picked.toLocal()}".split(' ')[0];
                     }
                   },
                 ),
 
-                const SizedBox(height: 20),
+                // --- حقول الاختيار (Dropdowns) المنظمة ---
+                _buildFieldLabel("Country"),
+                _buildDropdownField(
+                  hint: "Select Country",
+                  value: _selectedCountry,
+                  items:["Egypt", "Libya", "Tunisia", "Algeria", "Morocco", "Sudan", "Mauritania"] ,
+                  onChanged: (val) => setState(() => _selectedCountry = val),
+                  validator: (val) => val == null ? "Please select your country" : null,
+                ),
 
-                Row(
-                  children: const [
-                    Expanded(child: Divider(color: AppColors.primary, thickness: 1, endIndent: 10)),
-                    Text("OR", style: TextStyle(color: AppColors.black, fontWeight: FontWeight.bold, fontSize: 16)),
-                    Expanded(child: Divider(color: AppColors.primary, thickness: 1, indent: 10)),
-                  ],
+                const SizedBox(height: 15),
+
+                _buildFieldLabel("Gender"),
+                _buildDropdownField(
+                  hint: "Select Gender",
+                  value: _selectedGender,
+                  items: ["Male", "Female"],
+                  onChanged: (val) => setState(() => _selectedGender = val),
+                  validator: (val) => val == null ? "Please select your gender" : null,
+                ),
+
+                const SizedBox(height: 35),
+                PrimaryButton(
+                  text: "Sign Up",
+                  onPressed: () => _handleSignUp(),
                 ),
                 const SizedBox(height: 20),
-
-                const SocialButtons(),
-                const SizedBox(height: 20),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Already Have An Account? "),
-                    GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SignInPage()),
-                      ),
-                      child: const Text(
-                        "Sign In",
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildFooter(),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+
+
+  void _handleSignUp() async {
+    if (_formKey.currentState!.validate()) {
+      await AppStateManager.setLoggedIn();
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+            (route) => false,
+      );
+    }
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: const [
+        Text("Create Your New Account",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary)),
+        SizedBox(height: 10),
+        Text("Sign Up With The Following Method", style: TextStyle(fontSize: 16, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildFieldLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 8, left: 4),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String hint,
+    String? value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    required String? Function(String?) validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      onChanged: onChanged,
+      validator: validator,
+      icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.primary)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.primary)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.red)),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Column(
+      children: [
+        Row(
+          children: const [
+            Expanded(child: Divider(color: AppColors.primary, endIndent: 10)),
+            Text("OR", style: TextStyle(fontWeight: FontWeight.bold)),
+            Expanded(child: Divider(color: AppColors.primary, indent: 10)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        const SocialButtons(),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Already Have An Account? "),
+            GestureDetector(
+              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInPage())),
+              child: const Text("Sign In", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }

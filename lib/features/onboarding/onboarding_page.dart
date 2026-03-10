@@ -48,7 +48,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
   ];
 
-  // 👇 دالة موحدة للانتقال لصفحة تسجيل الدخول وحفظ الحالة
   Future<void> _completeOnboarding() async {
     await AppStateManager.setOnboardingSeen();
     if (!mounted) return;
@@ -60,93 +59,104 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size; // معرفة حجم الشاشة
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea( // لضمان عدم تداخل زر Skip مع شريط الساعة
-        child: Stack(
-          children: [
-            // 1. عرض الصفحات
-            PageView.builder(
-              controller: _controller,
-              itemCount: _pages.length,
-              onPageChanged: (i) =>
-                  setState(() => _isLast = i == _pages.length - 1),
-              itemBuilder: (_, i) => OnboardingItem(model: _pages[i]),
-            ),
-
-            // 2. زر الـ Skip (يظهر فقط إذا لم نكن في الصفحة الأخيرة)
-            if (!_isLast)
-              Positioned(
-                top: 10,
-                right: 20,
-                child: TextButton(
-                  onPressed: _completeOnboarding, // يودي للـ Sign In فوراً
-                  child: const Text(
-                    "Skip",
-                    style: TextStyle(
-                      color: Color(0xFF5BA480), // نفس لون الأخضر
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                // 1. عرض الصفحات
+                PageView.builder(
+                  controller: _controller,
+                  itemCount: _pages.length,
+                  onPageChanged: (i) =>
+                      setState(() => _isLast = i == _pages.length - 1),
+                  itemBuilder: (_, i) => SingleChildScrollView(
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      child: OnboardingItem(model: _pages[i]),
                     ),
                   ),
                 ),
-              ),
 
-            // 3. التحكم السفلي (Indicator + Next/Get Started)
-            Positioned(
-              bottom: 50,
-              left: 20,
-              right: 20,
-              child: Column(
-                children: [
-                  SmoothPageIndicator(
-                    controller: _controller,
-                    count: _pages.length,
-                    effect: const WormEffect(
-                      dotHeight: 10,
-                      dotWidth: 10,
-                      dotColor: Colors.grey,
-                      activeDotColor: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5BA480),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25,
-                          vertical: 12,
-                        ),
-                      ),
-                      onPressed: () {
-                        if (_isLast) {
-                          _completeOnboarding(); // يودي للـ Sign In
-                        } else {
-                          _controller.nextPage(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      },
-                      child: Text(
-                        _isLast ? "Get Started" : "Next",
-                        style: const TextStyle(
-                          color: Colors.black,
+                // 2. زر Skip
+                if (!_isLast)
+                  Positioned(
+                    top: size.height * 0.02,
+                    right: size.width * 0.05,
+                    child: TextButton(
+                      onPressed: _completeOnboarding,
+                      child: const Text(
+                        "Skip",
+                        style: TextStyle(
+                          color: Color(0xFF5BA480),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
+
+                // 3. التحكم السفلي
+                Positioned(
+                  bottom: size.height * 0.06,
+                  left: 20,
+                  right: 20,
+                  child: Column(
+                    children: [
+                      SmoothPageIndicator(
+                        controller: _controller,
+                        count: _pages.length,
+                        effect: const WormEffect(
+                          dotHeight: 10,
+                          dotWidth: 10,
+                          dotColor: Colors.grey,
+                          activeDotColor: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5BA480),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 12,
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_isLast) {
+                              _completeOnboarding();
+                            } else {
+                              _controller.nextPage(
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          },
+                          child: Text(
+                            _isLast ? "Get Started" : "Next",
+                            style: const TextStyle(
+                              color: AppColors.background,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

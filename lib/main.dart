@@ -1,7 +1,10 @@
 
+
+
 import 'package:flutter/material.dart';
 import 'core/constants/colors.dart';
 import 'features/auth/sign_in_page.dart';
+import 'features/chat_bot/chat_bot_screen.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/permission/pirmission_page.dart';
 import 'features/splash/splash_page.dart';
@@ -20,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Login App',
       theme: ThemeData(
-        primaryColor: AppColors.primary,
+       primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.background,
@@ -31,6 +34,11 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const SplashPage(),
+
+
+          // home: ChatBotScreen (),
+
+
     );
   }
 }
