@@ -1,9 +1,8 @@
-
 import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/otp_input.dart';
-import 'create_new_password_page.dart';
+import 'create_new_password_screen.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});
@@ -14,7 +13,10 @@ class VerifyOtpPage extends StatefulWidget {
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
   // مصفوفة Controllers لمربعات الـ OTP
-  final List<TextEditingController> _controllers = List.generate(6, (index) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
 
   @override
   void dispose() {
@@ -50,9 +52,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                   "Verify OTP Now",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -70,7 +72,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(
                       6,
-                          (index) => OtpInputWidget(
+                      (index) => OtpInputWidget(
                         controller: _controllers[index],
                         autoFocus: index == 0,
                       ),

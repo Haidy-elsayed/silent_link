@@ -1,14 +1,14 @@
-
 import 'package:flutter/material.dart';
 import 'package:silent_link/features/auth/presentation/widgets/social_buttons.dart';
-import 'package:silent_link/features/auth/sign_up_page.dart';
+import 'package:silent_link/features/auth/sign_up_screen.dart';
+import 'package:silent_link/navigation/main_navigation_screen.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/toggle_bar.dart';
 import '../../core/storage/app_statement_manager.dart';
-import '../home/home_page.dart';
-import 'forgot_password_page.dart';
+import '../home/home_screen.dart';
+import 'forgot_password_screen.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -23,10 +23,10 @@ class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _emailController = TextEditingController();
-  final _passController  = TextEditingController();
+  final _passController = TextEditingController();
 
   final _emailFocus = FocusNode();
-  final _passFocus  = FocusNode();
+  final _passFocus = FocusNode();
 
   @override
   void dispose() {
@@ -50,7 +50,8 @@ class _SignInPageState extends State<SignInPage> {
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
-          child: Form( // Form
+          child: Form(
+            // Form
             key: _formKey,
             child: Column(
               children: [
@@ -106,7 +107,9 @@ class _SignInPageState extends State<SignInPage> {
                   focusNode: _passFocus,
                   obscure: _obscure,
                   textInputAction: TextInputAction.done,
-                  suffixIcon: _obscure ? Icons.visibility_off : Icons.visibility,
+                  suffixIcon: _obscure
+                      ? Icons.visibility_off
+                      : Icons.visibility,
                   onSuffixPressed: () => setState(() => _obscure = !_obscure),
                   validator: (v) {
                     if (v == null || v.isEmpty) return "Password is required";
@@ -121,7 +124,9 @@ class _SignInPageState extends State<SignInPage> {
                   child: GestureDetector(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordPage(),
+                      ),
                     ),
                     child: Text(
                       "Forget Password?",
@@ -146,8 +151,10 @@ class _SignInPageState extends State<SignInPage> {
                       if (!mounted) return;
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => const HomePage()),
-                            (route) => false,
+                        MaterialPageRoute(
+                          builder: (_) => const MainNavigationScreen(),
+                        ),
+                        (route) => false,
                       );
                     }
                   },
@@ -158,11 +165,12 @@ class _SignInPageState extends State<SignInPage> {
                 Row(
                   children: const [
                     Expanded(
-                        child: Divider(
-                          color: AppColors.primary,
-                          thickness: 1,
-                          endIndent: 10,
-                        )),
+                      child: Divider(
+                        color: AppColors.primary,
+                        thickness: 1,
+                        endIndent: 10,
+                      ),
+                    ),
                     Text(
                       "OR",
                       style: TextStyle(
@@ -172,11 +180,12 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ),
                     Expanded(
-                        child: Divider(
-                          color: AppColors.primary,
-                          thickness: 1,
-                          indent: 10,
-                        )),
+                      child: Divider(
+                        color: AppColors.primary,
+                        thickness: 1,
+                        indent: 10,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -202,7 +211,7 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import 'verify_otp_page.dart';
+import 'verify_otp_screen.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -46,9 +46,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     "Forgot your password?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -56,9 +56,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     "Quickly Reset Your Password",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 60),
@@ -71,7 +71,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
-                      if (v == null || v.isEmpty) return "Email or phone is required";
+                      if (v == null || v.isEmpty)
+                        return "Email or phone is required";
                       // تحسين بسيط في الـ validation
                       if (!v.contains("@") && v.length < 10) {
                         return "Enter a valid email or phone";
@@ -87,7 +88,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       if (_formKey.currentState!.validate()) {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const VerifyOtpPage()),
+                          MaterialPageRoute(
+                            builder: (_) => const VerifyOtpPage(),
+                          ),
                         );
                       }
                     },
@@ -103,4 +106,3 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 }
-

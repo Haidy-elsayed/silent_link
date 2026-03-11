@@ -1,13 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/chat_input.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/message_bubble.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/quick_buttons.dart';
+import 'package:silent_link/navigation/main_navigation_screen.dart';
 import '../../core/constants/colors.dart';
-import '../home/home_page.dart';
+import '../home/home_screen.dart';
 import 'chat_bot_model.dart';
 import 'gemini_service.dart';
-
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -84,7 +83,10 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                       ListView.builder(
                         controller: _scrollController,
                         reverse: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         itemCount: _messages.length,
                         itemBuilder: (context, index) =>
                             MessageBubble(message: _messages[index]),
@@ -138,23 +140,31 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               top: 10,
               right: 10,
               child: IconButton(
-                icon: const Icon(Icons.edit_note, size: 32, color: Colors.black54),
+                icon: const Icon(
+                  Icons.edit_note,
+                  size: 32,
+                  color: Colors.black54,
+                ),
                 onPressed: _clearChat,
                 tooltip: "New Chat",
               ),
             ),
-//*****************************************
+            //*****************************************
             // ⭐ السهم الجديد للرجوع للهوم
             Positioned(
               top: 10,
               left: 10,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, size: 28, color: Colors.black54),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  size: 28,
+                  color: Colors.black54,
+                ),
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const HomePage (),
+                      builder: (context) => const MainNavigationScreen(),
                     ),
                   );
                 },
@@ -173,4 +183,3 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     super.dispose();
   }
 }
-

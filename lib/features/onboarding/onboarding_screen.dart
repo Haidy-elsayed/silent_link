@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:silent_link/features/onboarding/widgets/onboarding_item.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/constants/colors.dart';
 import '../../core/storage/app_statement_manager.dart';
-import '../auth/sign_in_page.dart';
-import '../permission/pirmission_page.dart';
+import '../auth/sign_in_screen.dart';
+import '../permission/pirmission_screen.dart';
 import 'data/onboarding_model.dart';
 
 class OnboardingPage extends StatefulWidget {

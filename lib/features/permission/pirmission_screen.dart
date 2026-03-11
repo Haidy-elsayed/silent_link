@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../core/constants/colors.dart';
 import '../../core/storage/app_statement_manager.dart';
-import '../auth/sign_in_page.dart';
+import '../auth/sign_in_screen.dart';
 import 'widgets/permission_card.dart';
 
 class PermissionsPage extends StatefulWidget {
@@ -15,11 +15,11 @@ class PermissionsPage extends StatefulWidget {
 class _PermissionsPageState extends State<PermissionsPage> {
   // متغيرات الحالة للصلاحيات
   bool _internetGranted = false;
- // bool _bluetoothGranted = true;
-  //bool _locationGranted =true;
-  // اثناء التطوير
-  bool _bluetoothGranted = false;
-  bool _locationGranted = false;
+  bool _bluetoothGranted = true;
+  bool _locationGranted = true;
+  // // اثناء التطوير
+  // bool _bluetoothGranted = false;
+  // bool _locationGranted = false;
 
   /// ===== Internet (محاكاة فقط لأنها تُمنح تلقائياً في Manifest) =====
   void _grantInternet() {
@@ -82,7 +82,8 @@ class _PermissionsPageState extends State<PermissionsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView( // حل مشكلة الـ Overflow للشاشات الصغيرة
+        child: SingleChildScrollView(
+          // حل مشكلة الـ Overflow للشاشات الصغيرة
           physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -145,8 +146,9 @@ class _PermissionsPageState extends State<PermissionsPage> {
                   onAllow: _locationGranted ? null : _requestLocation,
                 ),
 
-                const SizedBox(height: 60), // بدلاً من Spacer لتجنب أخطاء السكرول
-
+                const SizedBox(
+                  height: 60,
+                ), // بدلاً من Spacer لتجنب أخطاء السكرول
                 /// ===== Continue Button =====
                 SizedBox(
                   width: 180,

@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'package:silent_link/features/auth/sign_in_page.dart';
+import 'package:silent_link/features/auth/sign_in_screen.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -37,7 +36,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const SignInPage()),
-            (_) => false,
+        (_) => false,
       );
     }
   }
@@ -65,9 +64,9 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                     "Create New Password",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -86,11 +85,15 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                     controller: _newPassController,
                     focusNode: _newPassFocus,
                     textInputAction: TextInputAction.next,
-                    suffixIcon: newPass ? Icons.visibility_off : Icons.visibility,
+                    suffixIcon: newPass
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                     onSuffixPressed: () => setState(() => newPass = !newPass),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return "New password is required";
-                      if (v.length < 6) return "Password must be at least 6 characters";
+                      if (v == null || v.isEmpty)
+                        return "New password is required";
+                      if (v.length < 6)
+                        return "Password must be at least 6 characters";
                       return null;
                     },
                     nextFocus: _confirmPassFocus,
@@ -105,21 +108,23 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                     controller: _confirmPassController,
                     focusNode: _confirmPassFocus,
                     textInputAction: TextInputAction.done,
-                    suffixIcon: confirmPass? Icons.visibility_off : Icons.visibility,
-                    onSuffixPressed: () => setState(() => confirmPass = !confirmPass),
+                    suffixIcon: confirmPass
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    onSuffixPressed: () =>
+                        setState(() => confirmPass = !confirmPass),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return "Confirm password is required";
-                      if (v != _newPassController.text) return "Passwords do not match";
+                      if (v == null || v.isEmpty)
+                        return "Confirm password is required";
+                      if (v != _newPassController.text)
+                        return "Passwords do not match";
                       return null;
                     },
                   ),
                   const SizedBox(height: 40),
 
                   /// Continue Button
-                  PrimaryButton(
-                    text: "Continue",
-                    onPressed: _submit,
-                  ),
+                  PrimaryButton(text: "Continue", onPressed: _submit),
 
                   // مساحة إضافية في الآخر عشان الزرار ميبقاش لازق في حافة الكيبورد
                   const SizedBox(height: 20),
@@ -132,4 +137,3 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
     );
   }
 }
-

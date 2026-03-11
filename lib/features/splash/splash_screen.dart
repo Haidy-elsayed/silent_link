@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/storage/app_statement_manager.dart';
-import '../auth/sign_in_page.dart';
-import '../home/home_page.dart';
-import '../onboarding/onboarding_page.dart';
-import '../permission/pirmission_page.dart';
+import '../auth/sign_in_screen.dart';
+import '../home/home_screen.dart';
+import '../onboarding/onboarding_screen.dart';
+import '../permission/pirmission_screen.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -13,7 +13,6 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-
   @override
   void initState() {
     super.initState();
@@ -23,7 +22,7 @@ class _SplashPageState extends State<SplashPage> {
   Future<void> _decideRoute() async {
     // فقط أثناء التطوير:*******************************
     final logged = false;
-    final permissions =false;
+    final permissions = false;
     final seen = false;
     //*************************
     //final seen = await AppStateManager.isOnboardingSeen();
@@ -46,7 +45,7 @@ class _SplashPageState extends State<SplashPage> {
     } else if (logged) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       Navigator.pushReplacement(
@@ -63,25 +62,17 @@ class _SplashPageState extends State<SplashPage> {
         fit: StackFit.expand,
         children: [
           // صورة الخلفية تغطي كل الشاشة
-          Image.asset(
-            'assets/images/splash.png',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/splash.png', fit: BoxFit.cover),
           // اللوجو في النص (اختياري)
-         // Center(
-            //child: Image.asset(
-              //'assets/images/logo.png',
-             // width: 120,
-             // height: 120,
-           // ),
+          // Center(
+          //child: Image.asset(
+          //'assets/images/logo.png',
+          // width: 120,
+          // height: 120,
+          // ),
           //),
         ],
       ),
     );
   }
 }
-
-
-
-
-
