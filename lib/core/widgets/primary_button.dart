@@ -1,4 +1,4 @@
-
+/**
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
@@ -33,6 +33,61 @@ class PrimaryButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 15),
         ),
         onPressed: onPressed,
+        child: SizedBox(
+          width: double.infinity,
+          child: Center(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.background,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+**/
+import 'package:flutter/material.dart';
+import '../constants/colors.dart';
+
+class PrimaryButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed; // 👈 مهم جدًا يتغير هنا
+
+  const PrimaryButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondary.withOpacity(0.8),
+            blurRadius: 3,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+        onPressed: onPressed, // 👈 يقبل null عادي
         child: SizedBox(
           width: double.infinity,
           child: Center(

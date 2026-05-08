@@ -14,7 +14,7 @@ class PermissionsPage extends StatefulWidget {
 
 class _PermissionsPageState extends State<PermissionsPage> {
   // متغيرات الحالة للصلاحيات
-  bool _internetGranted = false;
+  //bool _internetGranted = false;
  // bool _bluetoothGranted = true;
   //bool _locationGranted =true;
   // اثناء التطوير
@@ -22,11 +22,11 @@ class _PermissionsPageState extends State<PermissionsPage> {
   bool _locationGranted = false;
 
   /// ===== Internet (محاكاة فقط لأنها تُمنح تلقائياً في Manifest) =====
-  void _grantInternet() {
+  /**void _grantInternet() {
     setState(() {
       _internetGranted = true;
     });
-  }
+  }**/
 
   /// ===== Location Permission =====
   Future<void> _requestLocation() async {
@@ -115,13 +115,13 @@ class _PermissionsPageState extends State<PermissionsPage> {
                 const SizedBox(height: 60),
 
                 /// ===== Internet =====
-                PermissionCard(
+               /** PermissionCard(
                   icon: Icons.wifi,
                   title: "Internet Access",
                   subtitle: "Connect to online services",
                   isGranted: _internetGranted,
                   onAllow: _internetGranted ? null : _grantInternet,
-                ),
+                ),**/
 
                 const SizedBox(height: 25),
 
@@ -149,7 +149,7 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
                 /// ===== Continue Button =====
                 SizedBox(
-                  width: 180,
+                  width: 200,
                   height: 55,
                   child: ElevatedButton(
                     onPressed: _continue,
@@ -171,7 +171,7 @@ class _PermissionsPageState extends State<PermissionsPage> {
                   ),
                 ),
 
-                const SizedBox(height: 30), // مساحة أمان سفلية
+                const SizedBox(height: 10), // مساحة أمان سفلية
               ],
             ),
           ),

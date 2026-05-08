@@ -4,16 +4,26 @@
 import 'package:flutter/material.dart';
 import 'core/constants/colors.dart';
 import 'features/auth/sign_in_page.dart';
-import 'features/chat_bot/chat_bot_screen.dart';
+import 'features/map/map_page.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/permission/pirmission_page.dart';
 import 'features/splash/splash_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await FMTCObjectBoxBackend().initialise();
+
+  runApp(MyApp());
+}
+//map
+/**void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
-
+**/
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -33,11 +43,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const SplashPage(),
+      //home: const SplashPage(),
 
 
-          // home: ChatBotScreen (),
 
+        home: MapPage(),
 
     );
   }

@@ -24,7 +24,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       title: "welcome to the disaster safety app",
       subTitle: "stay updated on earthquakes and floods in real time",
       description: "Stay safe anytime",
-      image: "assets/images/welcome_photo.png",
+      image: "assets/images/welcome4.jpeg",
       layoutType: OnboardingLayoutType.normal,
     ),
     OnboardingModel(
@@ -40,10 +40,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
       layoutType: OnboardingLayoutType.gridImages,
     ),
     OnboardingModel(
-      title: "Instant alerts",
-      subTitle: "Receive real-time notifications about important events",
+      title: "Be prepared for emergencies",
+      subTitle: "Get guidance and alerts to help you act quickly when it matters",
       description: "",
-      image: "assets/images/notification_photo.png",
+      image: "assets/images/emergency2.jpeg",
       layoutType: OnboardingLayoutType.bottomText,
     ),
   ];

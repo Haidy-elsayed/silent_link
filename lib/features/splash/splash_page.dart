@@ -21,7 +21,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _decideRoute() async {
-    // فقط أثناء التطوير:*******************************
+    //******************************
     final logged = false;
     final permissions =false;
     final seen = false;
@@ -64,7 +64,7 @@ class _SplashPageState extends State<SplashPage> {
         children: [
           // صورة الخلفية تغطي كل الشاشة
           Image.asset(
-            'assets/images/splash.png',
+            'assets/images/splash2.png',
             fit: BoxFit.cover,
           ),
           // اللوجو في النص (اختياري)
