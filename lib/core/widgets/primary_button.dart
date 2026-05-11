@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import '../constants/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -29,7 +28,9 @@ class PrimaryButton extends StatelessWidget {
           backgroundColor: AppColors.primary,
           // 2. تصفير الـ elevation الأصلي عشان نعتمد على شادو الـ Container
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 15),
         ),
         onPressed: onPressed,

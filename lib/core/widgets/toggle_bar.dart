@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import '../constants/app_colors.dart';
+
 class AuthToggleBar extends StatelessWidget {
   final bool isSignIn;
   final VoidCallback onToggle;
@@ -31,14 +31,17 @@ class AuthToggleBar extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(5),
-      child: Stack( // استخدمنا Stack لعمل تأثير الحركة فوق الخلفية الرمادية
+      child: Stack(
+        // استخدمنا Stack لعمل تأثير الحركة فوق الخلفية الرمادية
         children: [
           Row(
             children: [
               // زر الـ Sign In
               Expanded(
                 child: GestureDetector(
-                  onTap: () { if (!isSignIn) onToggle(); },
+                  onTap: () {
+                    if (!isSignIn) onToggle();
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
@@ -50,7 +53,9 @@ class AuthToggleBar extends StatelessWidget {
                     child: Text(
                       "Sign In",
                       style: TextStyle(
-                        color: isSignIn ? AppColors.background : AppColors.primary,
+                        color: isSignIn
+                            ? AppColors.background
+                            : AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -62,7 +67,9 @@ class AuthToggleBar extends StatelessWidget {
               // زر الـ Sign Up
               Expanded(
                 child: GestureDetector(
-                  onTap: () { if (isSignIn) onToggle(); },
+                  onTap: () {
+                    if (isSignIn) onToggle();
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
@@ -74,7 +81,9 @@ class AuthToggleBar extends StatelessWidget {
                     child: Text(
                       "Sign Up",
                       style: TextStyle(
-                        color: !isSignIn ? AppColors.background : AppColors.primary,
+                        color: !isSignIn
+                            ? AppColors.background
+                            : AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),

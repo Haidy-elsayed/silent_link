@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../core/constants/colors.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/storage/app_statement_manager.dart';
 import '../auth/sign_in_screen.dart';
 import 'widgets/permission_card.dart';
@@ -15,11 +15,11 @@ class PermissionsPage extends StatefulWidget {
 class _PermissionsPageState extends State<PermissionsPage> {
   // متغيرات الحالة للصلاحيات
   bool _internetGranted = false;
-  bool _bluetoothGranted = true;
-  bool _locationGranted = true;
+  // bool _bluetoothGranted = true;
+  // bool _locationGranted = true;
   // // اثناء التطوير
-  // bool _bluetoothGranted = false;
-  // bool _locationGranted = false;
+  bool _bluetoothGranted = false;
+  bool _locationGranted = false;
 
   /// ===== Internet (محاكاة فقط لأنها تُمنح تلقائياً في Manifest) =====
   void _grantInternet() {

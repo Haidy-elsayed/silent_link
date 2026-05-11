@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../core/widgets/curved_nav_bar.dart';
+import '../widgets/curved_nav_bar.dart';
 
-import '../features/home/home_screen.dart';
-import '../features/sos/sos_screen.dart';
-import '../features/map/map_screen.dart';
-import '../features/settings/settings_screen.dart';
-import '../features/chat_bot/chat_bot_screen.dart';
+import '../../features/home/home_screen.dart';
+import '../../features/sos/presentation/screens/sos_screen.dart';
+import '../../features/map/map_screen.dart';
+import '../../features/settings/settings_screen.dart';
+import '../../features/chat_bot/chat_bot_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -19,10 +19,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int currentIndex = 2;
 
   final List<Widget> pages = const [
-    SosPage(),
+    SosScreen(),
     HomeScreen(),
-    MapPage(),
-    SettingsPage(),
+    MapScreen(),
+    SettingsScreen(),
   ];
 
   @override

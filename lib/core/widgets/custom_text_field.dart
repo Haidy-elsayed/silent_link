@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import '../constants/app_colors.dart';
 
 class CustomTextField extends StatelessWidget {
   final String hint;
@@ -34,7 +33,8 @@ class CustomTextField extends StatelessWidget {
     this.textInputAction,
     this.keyboardType,
     this.onTap,
-    this.readOnly = false, // القيمة الافتراضية "غير مفعل" ليظل يعمل كحقل كتابة عادي
+    this.readOnly =
+        false, // القيمة الافتراضية "غير مفعل" ليظل يعمل كحقل كتابة عادي
   });
 
   @override
@@ -62,7 +62,7 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           readOnly: readOnly, // تفعيل خاصية القراءة فقط عند الحاجة
-          onTap: onTap,       // استدعاء الأكشن عند الضغط
+          onTap: onTap, // استدعاء الأكشن عند الضغط
           autovalidateMode: AutovalidateMode.onUserInteraction,
           onFieldSubmitted: (_) {
             if (nextFocus != null) {
@@ -72,16 +72,21 @@ class CustomTextField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             // التحقق إذا كانت الأيقونة موجودة أم لا
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.black) : null,
+            prefixIcon: prefixIcon != null
+                ? Icon(prefixIcon, color: AppColors.black)
+                : null,
             suffixIcon: suffixIcon == null
                 ? null
                 : IconButton(
-              icon: Icon(suffixIcon, color: AppColors.black),
-              onPressed: onSuffixPressed,
-            ),
+                    icon: Icon(suffixIcon, color: AppColors.black),
+                    onPressed: onSuffixPressed,
+                  ),
             filled: true,
             fillColor: Colors.transparent,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
             border: _border(),
             enabledBorder: _border(),
             focusedBorder: _border(width: 1.5),
@@ -96,10 +101,7 @@ class CustomTextField extends StatelessWidget {
   OutlineInputBorder _border({Color? color, double width = 1}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(15),
-      borderSide: BorderSide(
-        color: color ?? AppColors.primary,
-        width: width,
-      ),
+      borderSide: BorderSide(color: color ?? AppColors.primary, width: width),
     );
   }
 }

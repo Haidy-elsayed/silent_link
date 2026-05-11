@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_colors.dart';
 
 class PermissionCard extends StatelessWidget {
   final IconData icon;
@@ -43,7 +43,8 @@ class PermissionCard extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min, // يجعل العمود يأخذ مساحة المحتوى فقط
+              mainAxisSize:
+                  MainAxisSize.min, // يجعل العمود يأخذ مساحة المحتوى فقط
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -74,7 +75,6 @@ class PermissionCard extends StatelessWidget {
     );
   }
 }
-
 
 class _AllowButton extends StatelessWidget {
   final bool isGranted;

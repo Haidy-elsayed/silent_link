@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_colors.dart';
 
 class ChatInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
 
-  const ChatInput({
-    super.key,
-    required this.controller,
-    required this.onSend,
-  });
+  const ChatInput({super.key, required this.controller, required this.onSend});
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +30,12 @@ class ChatInput extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor:AppColors.primary,
+            backgroundColor: AppColors.primary,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
               onPressed: onSend,
             ),
-          )
+          ),
         ],
       ),
     );

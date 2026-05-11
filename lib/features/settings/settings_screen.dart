@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/colors.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import 'widgets/settings_tile.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsScreenState extends State<SettingsScreen> {
   bool notificationsEnabled = true;
 
   @override

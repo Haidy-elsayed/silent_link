@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:silent_link/features/onboarding/widgets/onboarding_item.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../../core/constants/colors.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/storage/app_statement_manager.dart';
 import '../auth/sign_in_screen.dart';
 import '../permission/pirmission_screen.dart';

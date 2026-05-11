@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
-import 'core/constants/colors.dart';
-import 'features/auth/sign_in_screen.dart';
-import 'features/chat_bot/chat_bot_screen.dart';
-import 'features/onboarding/onboarding_screen.dart';
-import 'features/permission/pirmission_screen.dart';
+import 'core/constants/app_colors.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/sos/services/sos_queue_service.dart';
+import 'features/sos/services/bluetooth_service.dart';
+import 'features/sos/services/notification_service.dart';
+import 'features/sos/services/local_db_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // تشغيل الـ notification service
+  await NotificationService().init();
+
+  // تشغيل الـ retry queue
+  SosQueueService().start();
+
+  // تشغيل الـ Bluetooth في الـ background عشان يستقبل SOS من أجهزة تانية
+  final btService = BluetoothService();
+  btService.onSosReceived = (request) async {
+    // لما يجي SOS عبر Bluetooth → حفظه محلياً تلقائياً
+    await LocalDbService().insertSosRequest(request);
+  };
+  await btService.start('SilentLink User');
+
   runApp(const MyApp());
 }
 
@@ -18,7 +33,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Login App',
+      title: 'Silent Link',
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
@@ -30,9 +45,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const SplashPage(),
-
-      // home: ChatBotScreen (),
+      home: const SplashScreen(),
     );
   }
 }
