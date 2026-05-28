@@ -8,9 +8,6 @@ import 'local_db_service.dart';
 import 'notification_service.dart';
 
 class BluetoothService {
-  // ===========================
-  // Singleton Pattern
-  // ===========================
   static final BluetoothService _instance = BluetoothService._internal();
   factory BluetoothService() => _instance;
   BluetoothService._internal();
@@ -18,28 +15,23 @@ class BluetoothService {
   final Nearby _nearby = Nearby();
   final LocalDbService _localDb = LocalDbService();
 
-  // ===========================
-  // Constants
-  // ===========================
   static const String _serviceId = 'com.silentlink.sos';
   static const Strategy _strategy = Strategy.P2P_CLUSTER;
 
-  // ===========================
-  // State
-  // ===========================
+  // FIX: بدل ما نعتمد على _isAdvertising/_isDiscovering flags
+  // هنعمل force stop دايماً قبل أي start عشان نتجنب
+  // STATUS_ALREADY_ADVERTISING و STATUS_ALREADY_DISCOVERING
   bool _isAdvertising = false;
   bool _isDiscovering = false;
 
-  // Discovered endpoints (deviceId → deviceName)
+  // FIX: flag عشان نمنع الـ background onDevicesChanged
+  // من إرسال الـ SOS بعد ما اتبعت
+  bool _sendingLock = false;
+
   final Map<String, String> _discoveredDevices = {};
-
-  // Active connections
   final Set<String> _connectedEndpoints = {};
-
-  // Seen SOS IDs (لمنع التكرار)
   final Set<String> _seenSosIds = {};
 
-  // Callbacks للـ UI
   void Function(Map<String, String> devices)? onDevicesChanged;
   void Function(SosRequestModel request)? onSosReceived;
   void Function(String endpointId, bool connected)? onConnectionChanged;
@@ -48,37 +40,36 @@ class BluetoothService {
   // Permissions
   // ===========================
   Future<bool> requestPermissions() async {
-    final statuses = await [
-      Permission.bluetooth,
+    final criticalPermissions = [
       Permission.bluetoothScan,
       Permission.bluetoothAdvertise,
       Permission.bluetoothConnect,
       Permission.locationWhenInUse,
+    ];
+    final optionalPermissions = [
+      Permission.bluetooth,
       Permission.nearbyWifiDevices,
-    ].request();
-
-    return statuses.values.every(
-      (status) => status == PermissionStatus.granted,
-    );
+    ];
+    final statuses =
+        await [...criticalPermissions, ...optionalPermissions].request();
+    for (final e in statuses.entries) {
+      debugPrint('Perm ${e.key}: ${e.value}');
+    }
+    final ok = criticalPermissions.every((p) =>
+        statuses[p] == PermissionStatus.granted ||
+        statuses[p] == PermissionStatus.limited);
+    debugPrint('Critical permissions ok: $ok');
+    return ok;
   }
 
   // ===========================
-  // Start (Advertise + Discover)
+  // FIX: _forceStop — بيوقف كل حاجة على مستوى الـ native
+  // بغض النظر عن الـ flags
   // ===========================
-  Future<bool> start(String userName) async {
-    final hasPermissions = await requestPermissions();
-    if (!hasPermissions) return false;
-
-    await _startAdvertising(userName);
-    await _startDiscovery();
-    return true;
-  }
-
-  /// وقف كل حاجة
-  Future<void> stop() async {
-    await _nearby.stopAdvertising();
-    await _nearby.stopDiscovery();
-    await _nearby.stopAllEndpoints();
+  Future<void> _forceStop() async {
+    try { await _nearby.stopAdvertising(); } catch (_) {}
+    try { await _nearby.stopDiscovery(); } catch (_) {}
+    try { await _nearby.stopAllEndpoints(); } catch (_) {}
     _isAdvertising = false;
     _isDiscovering = false;
     _discoveredDevices.clear();
@@ -86,21 +77,91 @@ class BluetoothService {
   }
 
   // ===========================
+  // start — من main.dart
+  // ===========================
+  Future<bool> start(String userName) async {
+    debugPrint('start() called');
+    // FIX: دايماً نعمل force stop الأول
+    // عشان لو كان في hot restart والـ native service لسه شغال
+    await _forceStop();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final ok = await requestPermissions();
+    if (!ok) { debugPrint('start() — permissions denied'); return false; }
+
+    await _startAdvertising(userName);
+    await _startDiscovery();
+    debugPrint('start() done adv=$_isAdvertising disc=$_isDiscovering');
+    return true;
+  }
+
+  // ===========================
+  // startForSending — من BluetoothSearchScreen
+  // ===========================
+  // startForSending — من BluetoothSearchScreen
+  // بيعمل discovery جديد بس من غير ما يوقف الـ advertising
+  Future<bool> startForSending() async {
+    debugPrint('startForSending() called');
+    _sendingLock = false;
+
+    // وقف الـ discovery القديم بس
+    try { await _nearby.stopDiscovery(); } catch (_) {}
+    try { await _nearby.stopAllEndpoints(); } catch (_) {}
+    _isDiscovering = false;
+    _discoveredDevices.clear();
+    _connectedEndpoints.clear();
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // ابدأ discovery جديد من غير ما تلمس الـ advertising
+    await _startDiscovery();
+    debugPrint('startForSending() done disc=$_isDiscovering adv=$_isAdvertising');
+    return _isDiscovering;
+  }
+
+  // ===========================
+  // stopDiscoveryOnly
+  // ===========================
+  Future<void> stopDiscoveryOnly() async {
+    try { await _nearby.stopDiscovery(); } catch (_) {}
+    try { await _nearby.stopAllEndpoints(); } catch (_) {}
+    _isDiscovering = false;
+    _discoveredDevices.clear();
+    _connectedEndpoints.clear();
+    debugPrint('Discovery stopped only');
+  }
+
+  Future<void> stop() async {
+    await _forceStop();
+    debugPrint('All BT stopped');
+  }
+
+  // ===========================
   // Advertising
   // ===========================
   Future<void> _startAdvertising(String userName) async {
-    if (_isAdvertising) return;
-
     try {
+      debugPrint('Starting advertising as: $userName');
       await _nearby.startAdvertising(
         userName,
         _strategy,
         serviceId: _serviceId,
-        onConnectionInitiated: _onConnectionInitiated,
+        onConnectionInitiated: (endpointId, info) {
+          debugPrint('Connection initiated: $endpointId (${info.endpointName})');
+          // FIX: قبول الـ connection تلقائياً بدون أي popup
+          _nearby.acceptConnection(
+            endpointId,
+            onPayLoadRecieved: _onPayloadReceived,
+            onPayloadTransferUpdate: (endpointId, update) {
+              debugPrint('Transfer: ${update.status}');
+            },
+          );
+        },
         onConnectionResult: _onConnectionResult,
         onDisconnected: _onDisconnected,
       );
       _isAdvertising = true;
+      debugPrint('Advertising started!');
     } catch (e) {
       debugPrint('Advertising error: $e');
     }
@@ -110,23 +171,22 @@ class BluetoothService {
   // Discovery
   // ===========================
   Future<void> _startDiscovery() async {
-    if (_isDiscovering) return;
-
     try {
-      await _nearby.startDiscovery(
-        _serviceId,
-        _strategy,
-        serviceId: _serviceId,
-        onEndpointFound: (endpointId, name, serviceId) {
-          _discoveredDevices[endpointId] = name;
-          onDevicesChanged?.call(Map.from(_discoveredDevices));
-        },
-        onEndpointLost: (endpointId) {
-          _discoveredDevices.remove(endpointId);
-          onDevicesChanged?.call(Map.from(_discoveredDevices));
-        },
-      );
+      debugPrint('Starting discovery...');
+      await _nearby.startDiscovery(_serviceId, _strategy,
+          serviceId: _serviceId,
+          onEndpointFound: (endpointId, name, serviceId) {
+            debugPrint('DEVICE FOUND: $name (id=$endpointId)');
+            _discoveredDevices[endpointId] = name;
+            onDevicesChanged?.call(Map.from(_discoveredDevices));
+          },
+          onEndpointLost: (endpointId) {
+            debugPrint('Device LOST: $endpointId');
+            _discoveredDevices.remove(endpointId);
+            onDevicesChanged?.call(Map.from(_discoveredDevices));
+          });
       _isDiscovering = true;
+      debugPrint('Discovery started!');
     } catch (e) {
       debugPrint('Discovery error: $e');
     }
@@ -136,14 +196,16 @@ class BluetoothService {
   // Connection Callbacks
   // ===========================
   void _onConnectionInitiated(String endpointId, ConnectionInfo info) {
-    _nearby.acceptConnection(
-      endpointId,
-      onPayLoadRecieved: _onPayloadReceived,
-      onPayloadTransferUpdate: (endpointId, update) {},
-    );
+    debugPrint('Connection initiated: $endpointId (${info.endpointName})');
+    _nearby.acceptConnection(endpointId,
+        onPayLoadRecieved: _onPayloadReceived,
+        onPayloadTransferUpdate: (endpointId, update) {
+          debugPrint('Transfer: ${update.status}');
+        });
   }
 
   void _onConnectionResult(String endpointId, Status status) {
+    debugPrint('Connection result: $endpointId -> $status');
     if (status == Status.CONNECTED) {
       _connectedEndpoints.add(endpointId);
       onConnectionChanged?.call(endpointId, true);
@@ -154,6 +216,7 @@ class BluetoothService {
   }
 
   void _onDisconnected(String endpointId) {
+    debugPrint('Disconnected: $endpointId');
     _connectedEndpoints.remove(endpointId);
     _discoveredDevices.remove(endpointId);
     onDevicesChanged?.call(Map.from(_discoveredDevices));
@@ -161,119 +224,145 @@ class BluetoothService {
   }
 
   // ===========================
-  // Send SOS via Bluetooth Mesh
+  // Send SOS
   // ===========================
   Future<BluetoothSendResult> sendSos(SosRequestModel request) async {
-    if (_discoveredDevices.isEmpty) {
-      return BluetoothSendResult.noDevices;
+    // FIX: استخدم _sendingLock بدل ما يعتمد على الـ screen فقط
+    if (_sendingLock) {
+      debugPrint('sendSos() blocked — already sending');
+      return BluetoothSendResult.failed;
     }
+    if (_discoveredDevices.isEmpty) return BluetoothSendResult.noDevices;
 
+    _sendingLock = true; // اقفل فوراً
     final targetEndpointId = _discoveredDevices.keys.first;
+    debugPrint('sendSos() sending to: ${_discoveredDevices[targetEndpointId]} ($targetEndpointId)');
 
-    // Completer عشان ننتظر نتيجة الاتصال الحقيقية
     final completer = Completer<BluetoothSendResult>();
 
     try {
-      await _nearby.requestConnection(
-        'SilentLink',
-        targetEndpointId,
-        onConnectionInitiated: _onConnectionInitiated,
-        onConnectionResult: (endpointId, status) async {
-          if (status == Status.CONNECTED) {
-            try {
-              await _sendPayload(endpointId, request);
-              if (request.sosId != null) {
-                await _localDb.updateState(request.sosId!, 'forwarded_bluetooth');
-                await _localDb.updateDeliveryMethod(request.sosId!, 'bluetooth');
+      await _nearby.requestConnection('SilentLink', targetEndpointId,
+          onConnectionInitiated: (endpointId, info) {
+            debugPrint('Send connection initiated: $endpointId');
+            _nearby.acceptConnection(
+              endpointId,
+              onPayLoadRecieved: _onPayloadReceived,
+              onPayloadTransferUpdate: (eid, update) {},
+            );
+          },
+          onConnectionResult: (endpointId, status) async {
+            debugPrint('Send conn result: $status');
+            if (status == Status.CONNECTED) {
+              try {
+                await _sendPayload(endpointId, request);
+                if (request.sosId != null && request.sosId!.isNotEmpty) {
+                  await _localDb.updateState(
+                      request.sosId!, 'forwarded_bluetooth');
+                  await _localDb.updateDeliveryMethod(
+                      request.sosId!, 'bluetooth');
+                } else {
+                  await _localDb.updateStateBySosIdOrCreatedAt(
+                    sosId: null,
+                    createdAt: request.createdAt.toIso8601String(),
+                    newState: 'forwarded_bluetooth',
+                  );
+                }
+                debugPrint('SOS sent successfully!');
+                if (!completer.isCompleted) {
+                  completer.complete(BluetoothSendResult.success);
+                }
+              } catch (e) {
+                debugPrint('Payload error: $e');
+                if (!completer.isCompleted) {
+                  completer.complete(BluetoothSendResult.failed);
+                }
               }
-              if (!completer.isCompleted) {
-                completer.complete(BluetoothSendResult.success);
-              }
-            } catch (e) {
+            } else {
+              debugPrint('Connection rejected: $status');
               if (!completer.isCompleted) {
                 completer.complete(BluetoothSendResult.failed);
               }
             }
-          } else {
+          },
+          onDisconnected: (_) {
+            debugPrint('Disconnected during send');
             if (!completer.isCompleted) {
               completer.complete(BluetoothSendResult.failed);
             }
-          }
-        },
-        onDisconnected: (_) {
-          if (!completer.isCompleted) {
-            completer.complete(BluetoothSendResult.failed);
-          }
+          });
+
+      final result = await completer.future.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('Send timeout!');
+          return BluetoothSendResult.failed;
         },
       );
 
-      // انتظر لحد 15 ثانية
-      return await completer.future.timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => BluetoothSendResult.failed,
-      );
+      // FIX: بعد الإرسال — فك الـ lock بس لو فشل
+      // عشان لو نجح مش هيتبعت تاني
+      if (result != BluetoothSendResult.success) {
+        _sendingLock = false;
+      }
+      return result;
     } catch (e) {
-      debugPrint('Send SOS error: $e');
+      debugPrint('sendSos error: $e');
+      _sendingLock = false;
       return BluetoothSendResult.failed;
     }
   }
 
-  Future<void> _sendPayload(String endpointId, SosRequestModel request) async {
+  Future<void> _sendPayload(
+      String endpointId, SosRequestModel request) async {
     final json = jsonEncode(request.toJson());
     final bytes = utf8.encode(json);
     await _nearby.sendBytesPayload(endpointId, Uint8List.fromList(bytes));
+    debugPrint('Payload sent: ${bytes.length} bytes');
   }
 
   // ===========================
   // Receive SOS
   // ===========================
   void _onPayloadReceived(String endpointId, Payload payload) async {
+    debugPrint('Payload received from: $endpointId');
     if (payload.type != PayloadType.BYTES) return;
-
     try {
       final json = utf8.decode(payload.bytes!);
       final map = jsonDecode(json) as Map<String, dynamic>;
       final request = SosRequestModel.fromJson(map);
-
-      // ✅ Fix: تجاهل لو الـ sosId null أو شفناه قبل كده
-      if (request.sosId == null) return;
-      if (_seenSosIds.contains(request.sosId!)) return;
-      _seenSosIds.add(request.sosId!);
-
+      final uniqueKey =
+          request.sosId ?? request.createdAt.toIso8601String();
+      if (_seenSosIds.contains(uniqueKey)) {
+        debugPrint('Dup SOS: $uniqueKey');
+        return;
+      }
+      _seenSosIds.add(uniqueKey);
       final savedRequest = request.copyWith(
-        state: 'received_bluetooth',
-        deliveryMethod: 'bluetooth',
-      );
-
+          state: 'received_bluetooth', deliveryMethod: 'bluetooth');
       await _localDb.insertSosRequest(savedRequest);
-
-      // ✅ بعت notification برا الفون
+      debugPrint('SOS saved: $uniqueKey');
       await NotificationService().sendIncomingSosNotification(
         senderName: request.name.isEmpty ? 'Unknown' : request.name,
-        emergencyType: request.emergencyType.isEmpty ? 'Emergency' : request.emergencyType,
+        emergencyType: request.emergencyType.isEmpty
+            ? 'Emergency'
+            : request.emergencyType,
         location: request.locationName.isEmpty
             ? '${request.latitude.toStringAsFixed(3)}, ${request.longitude.toStringAsFixed(3)}'
             : request.locationName,
+        createdAt: savedRequest.createdAt.toIso8601String(),
       );
-
       onSosReceived?.call(savedRequest);
     } catch (e) {
-      debugPrint('Payload parse error: $e');
+      debugPrint('Parse error: $e');
     }
   }
 
-  // ===========================
-  // Getters
-  // ===========================
   Map<String, String> get discoveredDevices => Map.from(_discoveredDevices);
   bool get isActive => _isAdvertising || _isDiscovering;
   bool get hasDevices => _discoveredDevices.isNotEmpty;
 }
 
-// ===========================
-// Result Enum
-// ===========================
 enum BluetoothSendResult { success, noDevices, failed }
 
 // ignore: avoid_print
-void debugPrint(String message) => print('[BluetoothService] $message');
+void debugPrint(String message) => print('[BT] $message');

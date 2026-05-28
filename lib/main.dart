@@ -4,25 +4,14 @@ import 'features/splash/splash_screen.dart';
 import 'features/sos/services/sos_queue_service.dart';
 import 'features/sos/services/bluetooth_service.dart';
 import 'features/sos/services/notification_service.dart';
-import 'features/sos/services/local_db_service.dart';
+import 'features/sos/presentation/screens/sos_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // تشغيل الـ notification service
   await NotificationService().init();
-
-  // تشغيل الـ retry queue
   SosQueueService().start();
-
-  // تشغيل الـ Bluetooth في الـ background عشان يستقبل SOS من أجهزة تانية
   final btService = BluetoothService();
-  btService.onSosReceived = (request) async {
-    // لما يجي SOS عبر Bluetooth → حفظه محلياً تلقائياً
-    await LocalDbService().insertSosRequest(request);
-  };
   await btService.start('SilentLink User');
-
   runApp(const MyApp());
 }
 
@@ -34,6 +23,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Silent Link',
+      // FIX: navigatorKey عشان الـ notification tap يعمل navigate
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
@@ -46,6 +37,10 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const SplashScreen(),
+      // FIX: لما الـ notification تتضغط → بيروح على SosScreen مباشرةً
+      routes: {
+        '/sos': (context) => const SosScreen(),
+      },
     );
   }
 }

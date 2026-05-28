@@ -73,38 +73,53 @@ class LocalDbService {
   // ===========================
   // READ
   // ===========================
-  // ── الطلبات اللي جات عبر Bluetooth ولسه ما اتبعتتش ──
-  // جيب أحدث request ناقص اتبعت
+
+  // FIX: توحيد الـ column name — كل الـ queries بتستخدم Capital S في State
   Future<SosRequestModel?> getLatestPendingRequest() async {
     final db = await database;
     final result = await db.query(
       'sos_requests',
-      where: 'state = ? OR state = ? OR state = ?',
+      where: 'State = ? OR State = ? OR State = ?',
       whereArgs: ['pending', 'pending_connection', 'forwarded_bluetooth'],
       orderBy: 'CreatedAt DESC',
       limit: 1,
     );
     if (result.isEmpty) return null;
-    return SosRequestModel.fromJson(result.first);
+    return _fromMap(result.first);
   }
 
   Future<List<SosRequestModel>> getReceivedBluetoothRequests() async {
     final db = await database;
     final result = await db.query(
       'sos_requests',
-      where: 'state = ? OR state = ?',
+      where: 'State = ? OR State = ?',
       whereArgs: ['received_bluetooth', 'forwarded_bluetooth'],
     );
-    return result.map((row) => SosRequestModel.fromJson(row)).toList();
+    return result.map((row) => _fromMap(row)).toList();
   }
 
-  Future<List<SosRequestModel>> getPendingRequests() async {
+  // FIX: بيجيب بس الـ requests بتاعت الجهاز نفسه
+  // مش الـ received_bluetooth اللي جات من جهاز تاني
+  Future<List<SosRequestModel>> getMyPendingRequests() async {
     final db = await database;
     final result = await db.query(
       'sos_requests',
       where: 'State = ? OR State = ?',
       whereArgs: ['pending', 'pending_connection'],
       orderBy: 'CreatedAt ASC',
+    );
+    return result.map((row) => _fromMap(row)).toList();
+  }
+
+  Future<List<SosRequestModel>> getPendingRequests() async {
+    final db = await database;
+    final result = await db.query(
+      'sos_requests',
+      // يظهر: pending, pending_connection, received_bluetooth
+      // يختفي لما: assisted, forwarded_bluetooth, delivered
+      where: 'State = ? OR State = ? OR State = ?',
+      whereArgs: ['pending', 'pending_connection', 'received_bluetooth'],
+      orderBy: 'CreatedAt DESC',
     );
     return result.map((row) => _fromMap(row)).toList();
   }
@@ -130,11 +145,24 @@ class LocalDbService {
     return _fromMap(result.first);
   }
 
+  // FIX: جيب الـ request بالـ CreatedAt (Primary Key)
+  // مفيد لو sosId لسه null (قبل ما يرد الـ backend)
+  Future<SosRequestModel?> getRequestByCreatedAt(String createdAt) async {
+    final db = await database;
+    final result = await db.query(
+      'sos_requests',
+      where: 'CreatedAt = ?',
+      whereArgs: [createdAt],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+    return _fromMap(result.first);
+  }
+
   // ===========================
   // UPDATE
   // ===========================
 
-  /// تحديث الـ SosId لما يرجع من الـ backend
   Future<void> updateSosId(String createdAt, String sosId) async {
     final db = await database;
     await db.update(
@@ -153,6 +181,30 @@ class LocalDbService {
       where: 'SosId = ?',
       whereArgs: [sosId],
     );
+  }
+
+  // FIX: fallback لو sosId = null → بيستخدم CreatedAt
+  Future<void> updateStateBySosIdOrCreatedAt({
+    required String? sosId,
+    required String createdAt,
+    required String newState,
+  }) async {
+    final db = await database;
+    if (sosId != null && sosId.isNotEmpty) {
+      await db.update(
+        'sos_requests',
+        {'State': newState},
+        where: 'SosId = ?',
+        whereArgs: [sosId],
+      );
+    } else {
+      await db.update(
+        'sos_requests',
+        {'State': newState},
+        where: 'CreatedAt = ?',
+        whereArgs: [createdAt],
+      );
+    }
   }
 
   Future<void> updateDeliveryMethod(String sosId, String method) async {

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../models/sos_request_model.dart';
 import '../../services/bluetooth_service.dart';
 import '../../services/local_db_service.dart';
+import '../../services/notification_service.dart';
 import 'all_requests_screen.dart';
 import 'create_sos_screen.dart';
 import 'bluetooth_search_screen.dart';
@@ -17,26 +19,85 @@ class SosScreen extends StatefulWidget {
   State<SosScreen> createState() => _SosScreenState();
 }
 
-class _SosScreenState extends State<SosScreen> {
+class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final LocalDbService _localDb = LocalDbService();
   final BluetoothService _bluetoothService = BluetoothService();
 
-  List<SosRequestModel> _pendingRequests = [];
+  // FIX: static عشان تفضل في الـ memory حتى لو الـ SosScreen اتعمل dispose
+  static List<SosRequestModel> _cachedRequests = [];
+  List<SosRequestModel> get _pendingRequests => _cachedRequests;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPendingRequests();
+    // FIX: بيعمل refresh كل ثانيتين عشان يلاقي الـ requests الجديدة
+    _startPeriodicRefresh();
 
     // لما يجي SOS عبر Bluetooth → اعرضه فوراً
     _bluetoothService.onSosReceived = (request) {
       if (mounted) _loadPendingRequests();
     };
+
+    // FIX: لما اليوزر يدوس على الـ notification
+    // بيجيلنا الـ createdAt → نجيب الـ request من الـ DB ونفتح الـ details
+    onNotificationOpenRequest = (createdAt) async {
+      await _loadPendingRequests();
+      if (!mounted) return;
+
+      SosRequestModel? request;
+
+      if (createdAt.isNotEmpty) {
+        // جيب الـ request بالـ createdAt
+        request = await _localDb.getRequestByCreatedAt(createdAt);
+      }
+
+      // fallback: أحدث request
+      request ??= _pendingRequests.isNotEmpty ? _pendingRequests.first : null;
+
+      if (request != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RequestDetailsScreen(request: request!),
+          ),
+        ).then((_) => _loadPendingRequests());
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    onNotificationOpenRequest = null;
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  // FIX: لما الأبلكيشن يرجع من الـ background → refresh
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadPendingRequests();
+    }
+  }
+
+  void _startPeriodicRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (mounted) _loadPendingRequests();
+    });
   }
 
   Future<void> _loadPendingRequests() async {
     final requests = await _localDb.getPendingRequests();
-    if (mounted) setState(() => _pendingRequests = requests);
+    // FIX: بنحدث الـ static cache دايماً
+    _cachedRequests = requests;
+    if (mounted) setState(() {});
   }
 
   Future<void> _handleForward(SosRequestModel request) async {
@@ -47,13 +108,17 @@ class _SosScreenState extends State<SosScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('SOS forwarded to server ✅')),
         );
+        _loadPendingRequests();
       }
     } else {
       if (mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => BluetoothSearchScreen(requestId: request.sosId),
+            builder: (_) => BluetoothSearchScreen(
+              requestId: request.sosId,
+              request: request,
+            ),
           ),
         ).then((_) => _loadPendingRequests());
       }
@@ -62,6 +127,7 @@ class _SosScreenState extends State<SosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -69,8 +135,6 @@ class _SosScreenState extends State<SosScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-
-            /// Title
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -78,10 +142,8 @@ class _SosScreenState extends State<SosScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
               ),
             ),
-
             const SizedBox(height: 20),
 
-            /// Pending Requests Section
             if (_pendingRequests.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
@@ -90,27 +152,21 @@ class _SosScreenState extends State<SosScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
-
               const SizedBox(height: 12),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _PendingRequestCard(
                   request: _pendingRequests.first,
-                  onAssist: () => Navigator.push(
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          RequestDetailsScreen(request: _pendingRequests.first),
+                      builder: (_) => RequestDetailsScreen(
+                          request: _pendingRequests.first),
                     ),
                   ).then((_) => _loadPendingRequests()),
-                  onForward: () => _handleForward(_pendingRequests.first),
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              /// View all requests
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
@@ -121,16 +177,12 @@ class _SosScreenState extends State<SosScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "View all requests",
-                        style: TextStyle(fontSize: 14, color: AppColors.grey),
-                      ),
+                      Text("View all requests",
+                          style:
+                              TextStyle(fontSize: 14, color: AppColors.grey)),
                       const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 16,
-                        color: AppColors.grey,
-                      ),
+                      Icon(Icons.arrow_forward,
+                          size: 16, color: AppColors.grey),
                     ],
                   ),
                 ),
@@ -139,7 +191,6 @@ class _SosScreenState extends State<SosScreen> {
 
             const Spacer(),
 
-            /// 🔴 Send SOS Button
             Padding(
               padding: const EdgeInsets.only(bottom: 65, left: 39, right: 39),
               child: Column(
@@ -169,8 +220,7 @@ class _SosScreenState extends State<SosScreen> {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CreateSosScreen(),
-                          ),
+                              builder: (_) => const CreateSosScreen()),
                         ).then((_) => _loadPendingRequests()),
                         child: const Text(
                           "Send SOS",
@@ -184,10 +234,8 @@ class _SosScreenState extends State<SosScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    "Tap in emergency",
-                    style: TextStyle(fontSize: 13, color: AppColors.grey),
-                  ),
+                  Text("Tap in emergency",
+                      style: TextStyle(fontSize: 13, color: AppColors.grey)),
                 ],
               ),
             ),
@@ -199,17 +247,15 @@ class _SosScreenState extends State<SosScreen> {
 }
 
 // ═══════════════════════════════════════
-// Pending Request Card Widget
+// Pending Request Card
 // ═══════════════════════════════════════
 class _PendingRequestCard extends StatelessWidget {
   final SosRequestModel request;
-  final VoidCallback onAssist;
-  final VoidCallback onForward;
+  final VoidCallback onTap;
 
   const _PendingRequestCard({
     required this.request,
-    required this.onAssist,
-    required this.onForward,
+    required this.onTap,
   });
 
   String _timeAgo(DateTime dt) {
@@ -221,152 +267,87 @@ class _PendingRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.sosRed.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Badge + Time ──
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.sosRed.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: AppColors.sosRed,
+                      borderRadius: BorderRadius.circular(6)),
+                  child: const Text('URGENT',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700)),
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.sosRed,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'URGENT',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _timeAgo(request.createdAt),
-                style: TextStyle(fontSize: 12, color: AppColors.grey),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // ── Icon + Name + Injury ──
-          Row(
-            children: [
-              Icon(
-                Icons.notifications_active_rounded,
-                color: AppColors.sosRed,
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    request.name.isEmpty ? 'Unknown' : request.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Text(_timeAgo(request.createdAt),
+                    style: TextStyle(fontSize: 12, color: AppColors.grey)),
+                const Spacer(),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: AppColors.grey),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.notifications_active_rounded,
+                    color: AppColors.sosRed, size: 28),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      request.name.isEmpty ? 'Unknown' : request.name,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  Text(
-                    request.injuryType,
+                    Text(request.injuryType,
+                        style:
+                            TextStyle(fontSize: 13, color: AppColors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.location_on_rounded,
+                    color: AppColors.grey, size: 16),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    request.locationName.isEmpty
+                        ? '${request.latitude.toStringAsFixed(3)}, ${request.longitude.toStringAsFixed(3)}'
+                        : request.locationName,
                     style: TextStyle(fontSize: 13, color: AppColors.grey),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // ── Location ──
-          Row(
-            children: [
-              Icon(Icons.location_on_rounded, color: AppColors.grey, size: 16),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  request.locationName.isEmpty
-                      ? '${request.latitude.toStringAsFixed(3)}, ${request.longitude.toStringAsFixed(3)}'
-                      : request.locationName,
-                  style: TextStyle(fontSize: 13, color: AppColors.grey),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // ── Buttons ──
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onAssist,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.sosRed,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Assist Now',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onForward,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Forward Request',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+
+          ],
+        ),
       ),
     );
   }
