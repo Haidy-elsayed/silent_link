@@ -52,10 +52,10 @@ class MapLocationModel extends MapLocationEntity {
 
   factory MapLocationModel.fromJson(Map<String, dynamic> json) {
     return MapLocationModel(
-      id: json['pinId'],                              // ✅ API بيبعت pinId
-      lat: (json['Latitude'] as num).toDouble(),      // ✅ API بيبعت Latitude بـ Capital
-      lng: (json['Longitude'] as num).toDouble(),     // ✅ API بيبعت Longitude بـ Capital
-      type: (json['type'] as String).toLowerCase(),   // ✅ "Danger" → "danger"
+      id: json['pinId'],
+      lat: (json['latitude'] as num).toDouble(),   // ✅ lowercase
+      lng: (json['longitude'] as num).toDouble(),  // ✅ lowercase
+      type: (json['type'] as String).toLowerCase(),
     );
   }
 
