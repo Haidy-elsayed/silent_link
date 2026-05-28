@@ -21,7 +21,7 @@ class NotificationService {
   Timer? _pollingTimer;
   bool _isPolling = false;
 
-  static const String _baseUrl = 'https://your-api.com';
+  static const String _baseUrl = 'https://silentlink.runasp.net';
   static const int _pollingIntervalSeconds = 30;
   static const String _pendingSosIdsKey = 'pending_sos_ids';
 
@@ -195,12 +195,12 @@ class NotificationService {
   Future<void> _checkSingleSosState(String sosId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/sos/$sosId/state'),
+        Uri.parse('$_baseUrl/api/App/$sosId/state'),
         headers: {'Content-Type': 'application/json'},
-      );
+      ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final newState = data['State'] as String?;
+        final newState = (data['state'] ?? data['State'])?.toString().toLowerCase();
         if (newState != null) await _handleStateChange(sosId, newState);
       }
     } catch (_) {}

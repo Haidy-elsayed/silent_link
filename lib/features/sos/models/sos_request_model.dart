@@ -105,22 +105,25 @@ class SosRequestModel {
   // ===========================
   // toJson — بدون SosId (الـ backend هو اللي بيولده)
   // ===========================
+  // toJson — بيتطابق مع الـ Swagger بالظبط
   Map<String, dynamic> toJson() {
+    // split name → firstName + lastName
+    final parts = name.trim().split(' ');
+    final firstName = parts.isNotEmpty ? parts.first : '';
+    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    // clientRequestId — local ID بنبعته للـ backend عشان يعرف لو اتبعت قبل كده
+    final clientRequestId = sosId ?? createdAt.millisecondsSinceEpoch.toString();
+
     return {
-      "EmergencyType": emergencyType,
-      "InjuryType": injuryType,
-      "State": state,
-      "Severity": severity,
-      "Latitude": latitude,
-      "Longitude": longitude,
-      "LocationName": locationName,
-      "Organization": organization,
-      "Country": country,
-      "RequestedByUserId": requestedByUserId,
-      "Name": name,
-      "Phone": phone,
-      "DeliveryMethod": deliveryMethod,
-      "CreatedAt": createdAt.toIso8601String(),
+      "firstName": firstName,
+      "lastName": lastName,
+      "latitude": latitude,
+      "longitude": longitude,
+      "locationName": locationName,
+      "emergencyType": emergencyType,
+      "injuryType": injuryType,
+      "severity": severity,
+      "clientRequestId": clientRequestId,
     };
   }
 

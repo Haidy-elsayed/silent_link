@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/sos_request_model.dart';
+import '../services/notification_service.dart';
 import '../services/bluetooth_service.dart';
 import '../services/network_service.dart';
 import '../services/local_db_service.dart';
@@ -47,15 +50,37 @@ class SosController {
     };
   }
 
+  static const String _baseUrl = 'https://silentlink.runasp.net';
+
   Future<Map<String, dynamic>?> _trySendToServer(
       SosRequestModel request) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return {
-        'SosId':
-            'SOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-        'State': 'pending',
-      };
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/App/SOS'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(request.toJson()),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        // sosId بيجي integer من الـ backend
+        final sosId = data['sosId']?.toString() ??
+            data['SosId']?.toString() ??
+            data['id']?.toString();
+        // state بيجي بـ Capital — بنحولها lowercase
+        final state = (data['state'] ?? data['State'] ?? 'pending')
+            .toString()
+            .toLowerCase();
+
+        // ابدأ tracking الـ sosId
+        if (sosId != null) {
+          await NotificationService().trackSosId(sosId);
+          NotificationService().startPolling();
+        }
+
+        return {'SosId': sosId, 'State': state};
+      }
+      return null;
     } catch (_) {
       return null;
     }
