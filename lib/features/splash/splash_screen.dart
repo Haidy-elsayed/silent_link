@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../core/storage/app_statement_manager.dart';
-import '../auth/sign_in_page.dart';
-import '../home/home_page.dart';
-import '../onboarding/onboarding_page.dart';
-import '../permission/pirmission_page.dart';
+import '../../navigation/main_navigation_screen.dart';
+import '../auth/sign_in_screen.dart';
+import '../onboarding/onboarding_screen.dart';
+import '../permission/pirmission_screen.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -13,7 +14,6 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-
   @override
   void initState() {
     super.initState();
@@ -21,37 +21,47 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _decideRoute() async {
-    //******************************
+    //**********
     final logged = false;
     final permissions =false;
     final seen = false;
-    //*************************
+    //*********
     //final seen = await AppStateManager.isOnboardingSeen();
+
     //final permissions = await AppStateManager.isPermissionsGranted();
+
     //final logged = await AppStateManager.isLoggedIn();
 
     await Future.delayed(const Duration(seconds: 2));
+
     if (!mounted) return;
 
+    /// أول مرة
     if (!seen) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingPage()),
       );
-    } else if (!permissions) {
+    }
+    /// permissions
+    else if (!permissions) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const PermissionsPage()),
       );
-    } else if (logged) {
+    }
+    /// logged in
+    else if (logged) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       );
-    } else {
+    }
+    /// مش عامل login
+    else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const SignInPage()),
+        MaterialPageRoute(builder: (_) => const SignInScreen()),
       );
     }
   }
@@ -61,27 +71,8 @@ class _SplashPageState extends State<SplashPage> {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
-        children: [
-          // صورة الخلفية تغطي كل الشاشة
-          Image.asset(
-            'assets/images/splash2.png',
-            fit: BoxFit.cover,
-          ),
-          // اللوجو في النص (اختياري)
-         // Center(
-            //child: Image.asset(
-              //'assets/images/logo.png',
-             // width: 120,
-             // height: 120,
-           // ),
-          //),
-        ],
+        children: [Image.asset('assets/images/splash3.png', fit: BoxFit.cover)],
       ),
     );
   }
 }
-
-
-
-
-

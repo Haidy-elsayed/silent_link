@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_colors.dart';
+//import '../../../core/constants/colors.dart';
 
 class PermissionCard extends StatelessWidget {
   final IconData icon;

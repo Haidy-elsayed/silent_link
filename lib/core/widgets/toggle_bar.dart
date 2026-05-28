@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import '../constants/app_colors.dart';
+
 class AuthToggleBar extends StatelessWidget {
   final bool isSignIn;
   final VoidCallback onToggle;

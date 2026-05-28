@@ -1,9 +1,10 @@
+/**
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/constants/app_colors.dart';
 import 'data/models/map_location.dart';
 import 'data/services/map_api_service.dart';
-import 'package:silent_link/core/constants/colors.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
 class MapPage extends StatefulWidget {
@@ -157,10 +158,10 @@ class _MapPageState extends State<MapPage> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          /// 🟢 تظبيط الـ Header الأخضر
+          /// تظبيط الـ Header
           Container(
             width: double.infinity,
-            height: 110, // ارتفاع ثابت
+            height: 110,
             decoration: BoxDecoration(
               color: AppColors.primary,
               borderRadius: const BorderRadius.only(
@@ -177,7 +178,7 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
 
-          /// 🔘 منطقة الزراير)
+          ///  منطقة الزراير)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 15),
             child: Row(
@@ -210,6 +211,215 @@ class _MapPageState extends State<MapPage> {
                 MarkerLayer(
                   markers: buildMarkers(),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+**/
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../../core/constants/app_colors.dart';
+import 'data/models/map_location.dart';
+import 'data/services/map_api_service.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class MapPage extends StatefulWidget {
+  @override
+  State<MapPage> createState() => _MapPageState();
+}
+
+class _MapPageState extends State<MapPage> {
+  bool isLoading = true;
+
+  List<MapLocationModel> allLocations = [];
+  List<MapLocationModel> filteredLocations = [];
+
+  String selectedType = "all";
+
+  // ============================================================
+  // 🟡 USER COUNTRY CENTER — شيلي الـ comment دي لو مش عايزاه
+  // ============================================================
+  // خريطة الدول → إحداثياتها المركزية
+  static const Map<String, List<double>> _countryCenters = {
+    'egypt':        [26.8206,  30.8025],
+    'libya':        [26.3351,  17.2283],
+    'tunisia':      [33.8869,   9.5375],
+    'algeria':      [28.0339,   1.6596],
+    'morocco':      [31.7917,  -7.0926],
+    'sudan':        [12.8628,  30.2176],
+    'mauritania':   [20.2540, -10.9408],
+  };
+
+  LatLng _initialCenter = const LatLng(26.8206, 30.8025); // default: Egypt
+  double _initialZoom   = 5.5; // zoom مناسب للدولة كلها
+
+  Future<void> _loadUserCountryCenter() async {
+    final prefs = await SharedPreferences.getInstance();
+    final country = (prefs.getString('user_country') ?? '').toLowerCase().trim();
+    final coords  = _countryCenters[country];
+    if (coords != null) {
+      setState(() {
+        _initialCenter = LatLng(coords[0], coords[1]);
+      });
+    }
+  }
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+    initCache();
+    _loadUserCountryCenter(); // 🟡 لو مش عايزاه احذفي السطر ده
+    loadData();
+  }
+
+  Future<void> initCache() async {
+    await FMTCStore('mapStore').manage.create();
+  }
+
+  Future<void> loadData() async {
+    setState(() => isLoading = true);
+    final data = await MapApiService().getLocations(); // ✅ API + cache + fallback
+    setState(() {
+      allLocations = data;
+      applyFilter("all", updateState: false);
+      isLoading = false;
+    });
+  }
+
+  void applyFilter(String type, {bool updateState = true}) {
+    if (updateState) {
+      setState(() {
+        selectedType = type;
+        filteredLocations = type == "all"
+            ? allLocations
+            : allLocations.where((e) => e.type == type).toList();
+      });
+    } else {
+      selectedType = type;
+      filteredLocations = type == "all"
+          ? allLocations
+          : allLocations.where((e) => e.type == type).toList();
+    }
+  }
+
+  List<Marker> buildMarkers() {
+    return filteredLocations.map((loc) {
+      final color = loc.type == "danger"
+          ? Colors.red
+          : loc.type == "safe"
+          ? Colors.green
+          : Colors.orange;
+
+      return Marker(
+        point: LatLng(loc.lat, loc.lng),
+        width: 40,
+        height: 40,
+        child: Icon(Icons.location_on, color: color, size: 40),
+      );
+    }).toList();
+  }
+
+  Widget buildButton(String title, String type, Color color) {
+    bool isSelected = selectedType == type;
+    return GestureDetector(
+      onTap: () => applyFilter(type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: isSelected
+              ? Border.all(color: Colors.black45, width: 1.5)
+              : null,
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            height: 110,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const SafeArea(
+              child: Text(
+                "Map",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+
+          // Filter buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                buildButton("Help arrived",   "help",   const Color(0xFFFFD54F)),
+                buildButton("Safe places",    "safe",   const Color(0xFF81C784)),
+                buildButton("Affected areas", "danger", const Color(0xFFE57373)),
+              ],
+            ),
+          ),
+
+          // Map
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : FlutterMap(
+              options: MapOptions(
+                initialCenter: _initialCenter, // 🟡 دولة الـ user
+                initialZoom: _initialZoom,     // 🟡 zoom مناسب
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                  "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
+                  tileProvider: FMTCStore('mapStore').getTileProvider(),
+                  userAgentPackageName: "com.example.app",
+                ),
+                MarkerLayer(markers: buildMarkers()),
               ],
             ),
           ),
