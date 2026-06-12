@@ -10,8 +10,6 @@ import 'bluetooth_failed_screen.dart';
 class BluetoothSearchScreen extends StatefulWidget {
   final String? requestId;
   final SosRequestModel? request;
-  // لو جاي من SosSuccessScreen → يروح BluetoothResultScreen/FailedScreen
-  // لو جاي من RequestDetailsScreen → يرجع true/false
   final bool fromSuccessScreen;
 
   const BluetoothSearchScreen({
@@ -37,17 +35,14 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
   late AnimationController _radarController;
 
   Timer? _timeoutTimer;
-  Timer? _sendTimer; // FIX: timer عشان نجمع كل الـ devices قبل الإرسال
+  Timer? _sendTimer;
   static const int _scanTimeoutSeconds = 30;
-  static const int _collectDevicesSeconds = 3; // استنى 3 ثواني لجمع الـ devices
+  static const int _collectDevicesSeconds = 3;
 
   @override
   void initState() {
     super.initState();
-    _radarController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    _radarController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
     _startScan();
   }
 
@@ -64,7 +59,6 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
   Future<void> _startScan() async {
     setState(() => _isStarting = true);
 
-    // جيب الـ request
     if (widget.request != null) {
       _request = widget.request;
     } else if (widget.requestId != null && widget.requestId!.isNotEmpty) {
@@ -78,53 +72,35 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
       setState(() => _devices = devices);
       if (devices.isNotEmpty && _request != null) {
         _timeoutTimer?.cancel();
-        // FIX: كل ما يظهر device جديد بنـreset الـ timer
-        // عشان نستنى شوية ونجمع كل الـ devices الموجودة
         _sendTimer?.cancel();
-        _sendTimer = Timer(
-          const Duration(seconds: _collectDevicesSeconds),
-          () {
-            if (!mounted || _hasSent) return;
-            _hasSent = true;
-            _sendSos();
-          },
-        );
+        _sendTimer = Timer(const Duration(seconds: _collectDevicesSeconds), () {
+          if (!mounted || _hasSent) return;
+          _hasSent = true;
+          _sendSos();
+        });
       }
     };
 
     await _bluetoothService.startForSending();
-
     if (mounted) setState(() => _isStarting = false);
 
-    _timeoutTimer = Timer(
-      const Duration(seconds: _scanTimeoutSeconds),
-      () {
-        if (mounted && !_hasSent) _navigateToFailed();
-      },
-    );
+    _timeoutTimer = Timer(const Duration(seconds: _scanTimeoutSeconds), () {
+      if (mounted && !_hasSent) _navigateToFailed();
+    });
   }
 
   Future<void> _sendSos() async {
     if (_request == null) return;
-
     final result = await _bluetoothService.sendSos(_request!);
     await _bluetoothService.stopDiscoveryOnly();
-
     if (!mounted) return;
 
     if (result == BluetoothSendResult.success) {
       if (widget.fromSuccessScreen) {
-        // جاي من SosSuccessScreen → روح BluetoothResultScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BluetoothResultScreen(
-              requestId: widget.requestId ?? _request?.sosId,
-            ),
-          ),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(
+          builder: (_) => BluetoothResultScreen(requestId: widget.requestId ?? _request?.sosId),
+        ));
       } else {
-        // جاي من RequestDetailsScreen → رجع true
         Navigator.pop(context, true);
       }
     } else {
@@ -136,18 +112,10 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
   void _navigateToFailed() {
     if (!mounted) return;
     if (widget.fromSuccessScreen) {
-      // جاي من SosSuccessScreen → روح BluetoothFailedScreen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BluetoothFailedScreen(
-            requestId: widget.requestId ?? _request?.sosId,
-            request: _request,
-          ),
-        ),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (_) => BluetoothFailedScreen(requestId: widget.requestId ?? _request?.sosId, request: _request),
+      ));
     } else {
-      // جاي من RequestDetailsScreen → رجع false
       Navigator.pop(context, false);
     }
   }
@@ -161,39 +129,40 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(sw),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProgressBar(),
+                    _buildProgressBar(sw),
                     const SizedBox(height: 32),
-                    Center(child: _buildRadar()),
+                    Center(child: _buildRadar(sw)),
                     const SizedBox(height: 28),
-                    Center(child: _buildSearchText()),
+                    Center(child: _buildSearchText(sw)),
                     const SizedBox(height: 24),
                     if (_devices.isNotEmpty) ...[
                       Text(
                         "NEARBY DEVICES (${_devices.length})",
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: sw * 0.027,
                           fontWeight: FontWeight.w600,
                           color: AppColors.grey.withOpacity(0.7),
                           letterSpacing: 0.8,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      ..._devices.entries.map((e) => _buildDeviceItem(e.key, e.value)),
+                      ..._devices.entries.map((e) => _buildDeviceItem(e.key, e.value, sw)),
                     ],
                     const SizedBox(height: 28),
-                    _buildCancelButton(),
+                    _buildCancelButton(sw),
                   ],
                 ),
               ),
@@ -204,7 +173,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(double sw) {
     return Container(
       color: AppColors.primary,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -222,14 +191,14 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
             ),
           ),
           const SizedBox(width: 12),
-          const Text("Bluetooth Mesh",
-              style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+          Text("Bluetooth Mesh",
+              style: TextStyle(color: Colors.white, fontSize: sw * 0.042, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  Widget _buildProgressBar() {
+  Widget _buildProgressBar(double sw) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -238,10 +207,10 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
           children: [
             Text(
               _isStarting ? "Initializing..." : (_hasSent ? "Sending..." : "Scanning nearby devices"),
-              style: TextStyle(fontSize: 12, color: AppColors.grey.withOpacity(0.75), fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: sw * 0.03, color: AppColors.grey.withOpacity(0.75), fontWeight: FontWeight.w500),
             ),
             Text("${_devices.length} found",
-                style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700)),
+                style: TextStyle(fontSize: sw * 0.03, color: AppColors.primary, fontWeight: FontWeight.w700)),
           ],
         ),
         const SizedBox(height: 8),
@@ -257,7 +226,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
     );
   }
 
-  Widget _buildRadar() {
+  Widget _buildRadar(double sw) {
     return SizedBox(
       width: 190, height: 190,
       child: AnimatedBuilder(
@@ -270,7 +239,8 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
                 Opacity(
                   opacity: ((1 - _radarController.value + i * 0.33) % 1.0) * 0.35,
                   child: Container(
-                    width: 190 - i * 38.0, height: 190 - i * 38.0,
+                    width: sw * 0.47 - i * sw * 0.095,
+                    height: sw * 0.47 - i * sw * 0.095,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.primary, width: 1.5),
@@ -291,10 +261,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
                     blurRadius: 18, spreadRadius: 2,
                   )],
                 ),
-                child: Icon(
-                  _hasSent ? Icons.send_rounded : Icons.bluetooth_rounded,
-                  color: Colors.white, size: 28,
-                ),
+                child: Icon(_hasSent ? Icons.send_rounded : Icons.bluetooth_rounded, color: Colors.white, size: 28),
               ),
             ],
           );
@@ -314,7 +281,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
     );
   }
 
-  Widget _buildSearchText() {
+  Widget _buildSearchText(double sw) {
     String title;
     String subtitle;
 
@@ -335,15 +302,15 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
     return Column(
       children: [
         Text(title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.black)),
+            style: TextStyle(fontSize: sw * 0.045, fontWeight: FontWeight.w700, color: AppColors.black)),
         const SizedBox(height: 8),
         Text(subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppColors.grey.withOpacity(0.8), height: 1.55)),
+            style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey.withOpacity(0.8), height: 1.55)),
         const SizedBox(height: 4),
         if (!_hasSent)
           Text("Timeout in ${_scanTimeoutSeconds}s if no device found",
-              style: TextStyle(fontSize: 11, color: AppColors.grey.withOpacity(0.55), fontStyle: FontStyle.italic)),
+              style: TextStyle(fontSize: sw * 0.027, color: AppColors.grey.withOpacity(0.55), fontStyle: FontStyle.italic)),
         const SizedBox(height: 10),
         AnimatedBuilder(
           animation: _radarController,
@@ -370,7 +337,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
     );
   }
 
-  Widget _buildDeviceItem(String endpointId, String deviceName) {
+  Widget _buildDeviceItem(String endpointId, String deviceName, double sw) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -389,18 +356,19 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(deviceName,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.black))),
+              style: TextStyle(fontSize: sw * 0.032, fontWeight: FontWeight.w600, color: AppColors.black))),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-            child: const Text("Found", style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.w600)),
+            child: Text("Found",
+                style: TextStyle(fontSize: sw * 0.027, color: Colors.green, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCancelButton() {
+  Widget _buildCancelButton(double sw) {
     return SizedBox(
       width: double.infinity, height: 50,
       child: OutlinedButton(
@@ -410,7 +378,7 @@ class _BluetoothSearchScreenState extends State<BluetoothSearchScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         child: Text("Cancel",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.grey.withOpacity(0.8))),
+            style: TextStyle(fontSize: sw * 0.035, fontWeight: FontWeight.w600, color: AppColors.grey.withOpacity(0.8))),
       ),
     );
   }

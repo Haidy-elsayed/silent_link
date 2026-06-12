@@ -5,33 +5,30 @@ import 'bluetooth_search_screen.dart';
 
 class BluetoothFailedScreen extends StatelessWidget {
   final String? requestId;
-  // FIX: بنقبل الـ request object عشان Try Again يشتغل صح
   final SosRequestModel? request;
 
   const BluetoothFailedScreen({super.key, this.requestId, this.request});
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context),
+            _buildHeader(context, sw),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   children: [
                     _buildFailedIcon(),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'No Devices Found',
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: sw * 0.065,
                         fontWeight: FontWeight.w700,
                         color: AppColors.black,
                       ),
@@ -41,19 +38,19 @@ class BluetoothFailedScreen extends StatelessWidget {
                       'No nearby devices were found.\nMake sure others nearby have\nSilent Link installed.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: sw * 0.032,
                         color: AppColors.grey.withOpacity(0.85),
                         height: 1.55,
                       ),
                     ),
                     const SizedBox(height: 28),
-                    _buildInfoCard(),
+                    _buildInfoCard(sw),
                     const SizedBox(height: 20),
-                    _buildWarningBox(),
+                    _buildWarningBox(sw),
                     const SizedBox(height: 32),
-                    _buildTryAgainButton(context),
+                    _buildTryAgainButton(context, sw),
                     const SizedBox(height: 12),
-                    _buildBackButton(context),
+                    _buildBackButton(context, sw),
                   ],
                 ),
               ),
@@ -64,7 +61,7 @@ class BluetoothFailedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, double sw) {
     return Container(
       color: AppColors.primary,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -77,26 +74,15 @@ class BluetoothFailedScreen extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.5),
-                  width: 1.5,
-                ),
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_rounded,
-                color: Colors.white,
-                size: 14,
-              ),
+              child: Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: sw * 0.035),
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Bluetooth Mesh',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: sw * 0.042, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -105,73 +91,46 @@ class BluetoothFailedScreen extends StatelessWidget {
 
   Widget _buildFailedIcon() {
     return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.sosRed.withOpacity(0.1),
-      ),
+      width: 120, height: 120,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.sosRed.withOpacity(0.1)),
       child: Center(
         child: Container(
-          width: 90,
-          height: 90,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.sosRed,
-          ),
+          width: 90, height: 90,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.sosRed),
           child: const Icon(Icons.close_rounded, color: Colors.white, size: 50),
         ),
       ),
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(double sw) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
-          _buildInfoRow(
-            dotColor: AppColors.sosRed,
-            label: 'REQUEST ID',
-            value: requestId ?? 'N/A',
-          ),
+          _buildInfoRow(dotColor: AppColors.sosRed, label: 'REQUEST ID', value: requestId ?? 'N/A', sw: sw),
           const SizedBox(height: 14),
           Divider(color: Colors.grey.shade100),
           const SizedBox(height: 14),
-          _buildInfoRow(
-            dotColor: AppColors.sosRed,
-            label: 'STATUS',
-            value: 'Saved locally — waiting for connection',
-          ),
+          _buildInfoRow(dotColor: AppColors.sosRed, label: 'STATUS', value: 'Saved locally — waiting for connection', sw: sw),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required Color dotColor,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoRow({required Color dotColor, required String label, required String value, required double sw}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           margin: const EdgeInsets.only(top: 5),
-          width: 8,
-          height: 8,
+          width: 8, height: 8,
           decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
         ),
         const SizedBox(width: 10),
@@ -179,24 +138,12 @@ class BluetoothFailedScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey.withOpacity(0.7),
-                  letterSpacing: 0.6,
-                ),
-              ),
+              Text(label,
+                  style: TextStyle(fontSize: sw * 0.025, fontWeight: FontWeight.w600,
+                      color: AppColors.grey.withOpacity(0.7), letterSpacing: 0.6)),
               const SizedBox(height: 3),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
+              Text(value,
+                  style: TextStyle(fontSize: sw * 0.032, fontWeight: FontWeight.w600, color: AppColors.black)),
             ],
           ),
         ),
@@ -204,7 +151,7 @@ class BluetoothFailedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWarningBox() {
+  Widget _buildWarningBox(double sw) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -215,20 +162,12 @@ class BluetoothFailedScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: Colors.orange.shade700,
-            size: 20,
-          ),
+          Icon(Icons.info_outline_rounded, color: Colors.orange.shade700, size: sw * 0.05),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Your SOS is saved. It will be sent automatically once your device connects to the internet.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.orange.shade800,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: sw * 0.032, color: Colors.orange.shade800, height: 1.5),
             ),
           ),
         ],
@@ -236,64 +175,40 @@ class BluetoothFailedScreen extends StatelessWidget {
     );
   }
 
-  // ─── Try Again ───
-  Widget _buildTryAgainButton(BuildContext context) {
+  Widget _buildTryAgainButton(BuildContext context, double sw) {
     return SizedBox(
-      width: double.infinity,
-      height: 52,
+      width: double.infinity, height: 52,
       child: ElevatedButton.icon(
         onPressed: () {
-          // FIX: بنبعت الـ request object لو موجود عشان نضمن إن الـ scan
-          // هيلاقي الـ request من غير ما يرجع يدور في الـ DB
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) =>
-                  BluetoothSearchScreen(requestId: requestId, request: request),
+              builder: (_) => BluetoothSearchScreen(requestId: requestId, request: request),
             ),
           );
         },
-        icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-        label: const Text(
-          'Try Again',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        icon: Icon(Icons.refresh_rounded, color: Colors.white, size: sw * 0.05),
+        label: Text('Try Again',
+            style: TextStyle(color: Colors.white, fontSize: sw * 0.037, fontWeight: FontWeight.w600)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.sosRed,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          backgroundColor: AppColors.sosRed, elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
     );
   }
 
-  Widget _buildBackButton(BuildContext context) {
+  Widget _buildBackButton(BuildContext context, double sw) {
     return SizedBox(
-      width: double.infinity,
-      height: 52,
+      width: double.infinity, height: 52,
       child: ElevatedButton(
         onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          backgroundColor: AppColors.primary, elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
-        child: const Text(
-          'Back to home',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: Text('Back to home',
+            style: TextStyle(color: Colors.white, fontSize: sw * 0.037, fontWeight: FontWeight.w600)),
       ),
     );
   }

@@ -12,7 +12,7 @@
     },
 
     {
-      "keywords":["cut","جرح","bleeding","نزيف","wound","جرح مفتوح"],
+      "keywords":["cut","جرح","Bleeding","نزيف","wound","جرح مفتوح"],
       "response":"Apply firm pressure with a clean cloth. Elevate the injured area. Seek medical help if bleeding continues."
     },
 
@@ -244,6 +244,16 @@
     {
       "keywords":["pregnant faint","اغماء حامل"],
       "response":"Lay the person on the left side and ensure fresh air."
+    },
+
+    {
+      "keywords":["Flood","فيضان","غرق بسبب فيضان","سيول","flooding"],
+      "response":"Move to higher ground immediately. Avoid walking or driving through flood Turn off electricity if safe. Drink clean or boiled water only."
+    },
+
+    {
+      "keywords":["Earthquake","زلزال","هزة ارضية","seismic","tremor"],
+      "response":"Drop, cover, and hold on. Stay away from windows. After shaking stops, evacuate to an open area away from buildings."
     }
 
   ]

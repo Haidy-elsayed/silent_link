@@ -18,12 +18,9 @@ class CreateSosScreen extends StatefulWidget {
 
 class _CreateSosScreenState extends State<CreateSosScreen> {
   int currentStep = 0;
-
   final SosController controller = SosController();
-
   SosRequestModel sosRequest = SosRequestModel.empty();
 
-  // ── حفظ الداتا عشان ترجع لما يرجع لأي step ──
   String savedName = '';
   String savedPhone = '';
   String savedCountryCode = '+20';
@@ -37,6 +34,7 @@ class _CreateSosScreenState extends State<CreateSosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: CustomCurvedNavBar(
@@ -48,8 +46,6 @@ class _CreateSosScreenState extends State<CreateSosScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-
-              /// Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -72,23 +68,16 @@ class _CreateSosScreenState extends State<CreateSosScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       "Send SOS",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: sw * 0.055, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 22),
-
               StepIndicator(currentStep: currentStep),
-
               const SizedBox(height: 28),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildStep(),
@@ -102,7 +91,6 @@ class _CreateSosScreenState extends State<CreateSosScreen> {
 
   Widget _buildStep() {
     switch (currentStep) {
-      /// STEP 1
       case 0:
         return Step1PersonalInfo(
           initialName: savedName,
@@ -110,72 +98,44 @@ class _CreateSosScreenState extends State<CreateSosScreen> {
           initialCountryCode: savedCountryCode,
           initialCountryFlag: savedCountryFlag,
           onNext: (name, phone, countryCode, countryFlag) {
-            savedName = name;
-            savedPhone = phone;
-            savedCountryCode = countryCode;
-            savedCountryFlag = countryFlag;
-            sosRequest = sosRequest.copyWith(
-              name: name,
-              phone: '$countryCode$phone',
-            );
+            savedName = name; savedPhone = phone;
+            savedCountryCode = countryCode; savedCountryFlag = countryFlag;
+            sosRequest = sosRequest.copyWith(name: name, phone: '$countryCode$phone');
             setState(() => currentStep = 1);
           },
         );
-
-      /// STEP 2
       case 1:
         return Step2Location(
           initialAddress: savedLocationName,
           initialLatitude: savedLatitude,
           initialLongitude: savedLongitude,
           onNext: (locationName, latitude, longitude) {
-            savedLocationName = locationName;
-            savedLatitude = latitude;
-            savedLongitude = longitude;
-            sosRequest = sosRequest.copyWith(
-              locationName: locationName,
-              latitude: latitude,
-              longitude: longitude,
-            );
+            savedLocationName = locationName; savedLatitude = latitude; savedLongitude = longitude;
+            sosRequest = sosRequest.copyWith(locationName: locationName, latitude: latitude, longitude: longitude);
             setState(() => currentStep = 2);
           },
         );
-
-      /// STEP 3
       case 2:
         return Step3IncidentType(
           initialEmergency: savedEmergency,
           initialInjury: savedInjury,
           initialSeverity: savedSeverity,
           onChanged: (emergency, injury, severity) {
-            savedEmergency = emergency;
-            savedInjury = injury;
-            savedSeverity = severity;
+            savedEmergency = emergency; savedInjury = injury; savedSeverity = severity;
           },
           onSubmit: (emergency, injury, severity) async {
-            savedEmergency = emergency;
-            savedInjury = injury;
-            savedSeverity = severity;
-            sosRequest = sosRequest.copyWith(
-              emergencyType: emergency,
-              injuryType: injury,
-              severity: severity,
-            );
-
+            savedEmergency = emergency; savedInjury = injury; savedSeverity = severity;
+            sosRequest = sosRequest.copyWith(emergencyType: emergency, injuryType: injury, severity: severity);
             final result = await controller.submit(sosRequest);
-
             if (!mounted) return;
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => SosSuccessScreen(
-                  requestId: result["sosId"] ?? "Pending...",
-                  status: result["state"],
-                ),
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => SosSuccessScreen(
+                requestId: result["sosId"]?.toString() ?? "Pending...",
+                status: result["state"],
               ),
-            );
+            ));
           },
         );
-
       default:
         return const SizedBox();
     }

@@ -8,63 +8,44 @@ class BluetoothResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──
-            _buildHeader(context),
-
+            _buildHeader(context, sw),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   children: [
-                    // ── Success Icon ──
                     _buildSuccessIcon(),
-
                     const SizedBox(height: 24),
-
-                    // ── Title ──
-                    const Text(
+                    Text(
                       "SOS Forwarded",
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: sw * 0.065,
                         fontWeight: FontWeight.w700,
                         color: AppColors.black,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Text(
-                      "Your SOs was sent to a nearby device\nThey will forward it when connected",
+                      "Your SOS was sent to a nearby device\nThey will forward it when connected",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: sw * 0.032,
                         color: AppColors.grey.withOpacity(0.85),
                         height: 1.55,
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // ── Info Card ──
-                    _buildInfoCard(),
-
+                    _buildInfoCard(sw),
                     const SizedBox(height: 20),
-
-                    // ── Mesh Path ──
-                    _buildMeshPath(),
-
+                    _buildMeshPath(sw),
                     const SizedBox(height: 32),
-
-                    // ── Back to Home ──
-                    _buildBackButton(context),
+                    _buildBackButton(context, sw),
                   ],
                 ),
               ),
@@ -75,8 +56,7 @@ class BluetoothResultScreen extends StatelessWidget {
     );
   }
 
-  // ─── Header ───
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, double sw) {
     return Container(
       color: AppColors.primary,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -85,122 +65,68 @@ class BluetoothResultScreen extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 32,
-              height: 32,
+              width: 32, height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.5),
-                  width: 1.5,
-                ),
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_rounded,
-                color: Colors.white,
-                size: 14,
-              ),
+              child: Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: sw * 0.035),
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            "Bluetooth Mesh",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text("Bluetooth Mesh",
+              style: TextStyle(color: Colors.white, fontSize: sw * 0.042, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  // ─── Success Icon ───
   Widget _buildSuccessIcon() {
     return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.green.withOpacity(0.1),
-      ),
+      width: 120, height: 120,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green.withOpacity(0.1)),
       child: Center(
         child: Container(
-          width: 90,
-          height: 90,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.green,
-          ),
+          width: 90, height: 90,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
           child: const Icon(Icons.check_rounded, color: Colors.white, size: 50),
         ),
       ),
     );
   }
 
-  // ─── Info Card ───
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(double sw) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
-          // Request ID
-          _buildInfoRow(
-            dotColor: Colors.green,
-            label: "REQUEST ID",
-            value: requestId ?? "N/A",
-          ),
-
+          _buildInfoRow(dotColor: Colors.green, label: "REQUEST ID", value: requestId ?? "N/A", sw: sw),
           const SizedBox(height: 14),
           Divider(color: Colors.grey.shade100),
           const SizedBox(height: 14),
-
-          // Status
-          _buildInfoRow(
-            dotColor: Colors.green,
-            label: "STATUS",
-            value: "Forwarded to nearby device",
-          ),
-
+          _buildInfoRow(dotColor: Colors.green, label: "STATUS", value: "Forwarded to nearby device", sw: sw),
           const SizedBox(height: 14),
           Divider(color: Colors.grey.shade100),
           const SizedBox(height: 14),
-
-          // Server Delivery
-          _buildInfoRow(
-            dotColor: Colors.orange,
-            label: "SERVER DELIVERY",
-            value: "Pending - not confirmed yet",
-          ),
+          _buildInfoRow(dotColor: Colors.orange, label: "SERVER DELIVERY", value: "Pending - not confirmed yet", sw: sw),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required Color dotColor,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoRow({required Color dotColor, required String label, required String value, required double sw}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           margin: const EdgeInsets.only(top: 5),
-          width: 8,
-          height: 8,
+          width: 8, height: 8,
           decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
         ),
         const SizedBox(width: 10),
@@ -208,24 +134,12 @@ class BluetoothResultScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey.withOpacity(0.7),
-                  letterSpacing: 0.6,
-                ),
-              ),
+              Text(label,
+                  style: TextStyle(fontSize: sw * 0.025, fontWeight: FontWeight.w600,
+                      color: AppColors.grey.withOpacity(0.7), letterSpacing: 0.6)),
               const SizedBox(height: 3),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
+              Text(value,
+                  style: TextStyle(fontSize: sw * 0.032, fontWeight: FontWeight.w600, color: AppColors.black)),
             ],
           ),
         ),
@@ -233,164 +147,80 @@ class BluetoothResultScreen extends StatelessWidget {
     );
   }
 
-  // ─── Mesh Path ───
-  Widget _buildMeshPath() {
+  Widget _buildMeshPath(double sw) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Mesh Path",
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.grey.withOpacity(0.7),
-              letterSpacing: 0.6,
-            ),
-          ),
+          Text("Mesh Path",
+              style: TextStyle(fontSize: sw * 0.027, fontWeight: FontWeight.w600,
+                  color: AppColors.grey.withOpacity(0.7), letterSpacing: 0.6)),
           const SizedBox(height: 16),
-
-          // Path nodes
           Row(
             children: [
-              // Device
-              _buildPathNode(
-                color: AppColors.primary,
-                icon: Icons.person_rounded,
-                label: "Device",
-              ),
-
-              // Line solid
-              Expanded(
-                child: Container(
-                  height: 2,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  color: AppColors.primary,
-                ),
-              ),
-
-              // You
-              _buildPathNode(
-                color: Colors.orange,
-                icon: Icons.person_rounded,
-                label: "You",
-              ),
-
-              // Line dashed
-              Expanded(
-                child: Container(
-                  height: 2,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  child: CustomPaint(painter: _DashedLinePainter()),
-                ),
-              ),
-
-              // Server
-              _buildPathNode(
-                color: Colors.grey.shade300,
-                icon: Icons.dns_rounded,
-                label: "Server",
-                iconColor: Colors.grey,
-              ),
+              _buildPathNode(color: AppColors.primary, icon: Icons.person_rounded, label: "Device", sw: sw),
+              Expanded(child: Container(height: 2, margin: const EdgeInsets.only(bottom: 18), color: AppColors.primary)),
+              _buildPathNode(color: Colors.orange, icon: Icons.person_rounded, label: "You", sw: sw),
+              Expanded(child: Container(height: 2, margin: const EdgeInsets.only(bottom: 18),
+                  child: CustomPaint(painter: _DashedLinePainter()))),
+              _buildPathNode(color: Colors.grey.shade300, icon: Icons.dns_rounded, label: "Server", iconColor: Colors.grey, sw: sw),
             ],
           ),
-
           const SizedBox(height: 8),
-
           Center(
-            child: Text(
-              "⏳ Waiting for device to reach server",
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.grey.withOpacity(0.7),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            child: Text("⏳ Waiting for device to reach server",
+                style: TextStyle(fontSize: sw * 0.027, color: AppColors.grey.withOpacity(0.7), fontStyle: FontStyle.italic)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPathNode({
-    required Color color,
-    required IconData icon,
-    required String label,
-    Color? iconColor,
-  }) {
+  Widget _buildPathNode({required Color color, required IconData icon, required String label, Color? iconColor, required double sw}) {
     return Column(
       children: [
         Container(
-          width: 36,
-          height: 36,
+          width: 36, height: 36,
           decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-          child: Icon(icon, color: iconColor ?? Colors.white, size: 18),
+          child: Icon(icon, color: iconColor ?? Colors.white, size: sw * 0.045),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: AppColors.grey.withOpacity(0.7),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label,
+            style: TextStyle(fontSize: sw * 0.025, color: AppColors.grey.withOpacity(0.7), fontWeight: FontWeight.w500)),
       ],
     );
   }
 
-  // ─── Back Button ───
-  Widget _buildBackButton(BuildContext context) {
+  Widget _buildBackButton(BuildContext context, double sw) {
     return SizedBox(
-      width: double.infinity,
-      height: 52,
+      width: double.infinity, height: 52,
       child: ElevatedButton(
         onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          backgroundColor: AppColors.primary, elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
-        child: const Text(
-          "Back to home",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: Text("Back to home",
+            style: TextStyle(color: Colors.white, fontSize: sw * 0.037, fontWeight: FontWeight.w600)),
       ),
     );
   }
 }
 
-// ─── Dashed Line Painter ───
 class _DashedLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 2;
-
+    final paint = Paint()..color = Colors.grey.shade300..strokeWidth = 2;
     double startX = 0;
     const dashWidth = 5.0;
     const dashSpace = 4.0;
-
     while (startX < size.width) {
       canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
       startX += dashWidth + dashSpace;

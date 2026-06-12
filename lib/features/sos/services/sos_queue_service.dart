@@ -1,10 +1,8 @@
 import 'dart:async';
 import '../controllers/sos_controller.dart';
+import '../../auth/service/auth_service.dart';
 
 class SosQueueService {
-  // ===========================
-  // Singleton Pattern
-  // ===========================
   static final SosQueueService _instance = SosQueueService._internal();
   factory SosQueueService() => _instance;
   SosQueueService._internal();
@@ -15,40 +13,45 @@ class SosQueueService {
   bool _isRunning = false;
   bool _isProcessing = false;
 
-  // ===========================
-  // Start Queue (بيتشغل مع الأبلكيشن)
-  // ===========================
   void start() {
     if (_isRunning) return;
     _isRunning = true;
 
-    // شغل مرة فوراً عند البداية
+    // بنستنى الـ token يكون موجود قبل ما نبدأ
+    // عشان متبعتش requests من غير authentication
+    _startWhenReady();
+  }
+
+  Future<void> _startWhenReady() async {
+    // استنى لحد ما الـ token يكون موجود (max 30 ثانية)
+    int attempts = 0;
+    while (AuthServices.token == null && attempts < 30) {
+      await Future.delayed(const Duration(seconds: 1));
+      attempts++;
+    }
+
+    if (AuthServices.token == null) return; // مفيش token → متشتغلش
+
+    // شغل أول مرة بعد ما الـ token يكون جاهز
     _processPendingRequests();
 
-    // بعدين كل 5 ثواني
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+    // بعدين كل 30 ثانية
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
       _processPendingRequests();
     });
   }
 
-  // ===========================
-  // Stop Queue
-  // ===========================
   void stop() {
     _timer?.cancel();
     _timer = null;
     _isRunning = false;
   }
 
-  // ===========================
-  // Process Pending Requests
-  // ===========================
   Future<void> _processPendingRequests() async {
-    // لو في process شغالة، متشتغلش تاني في نفس الوقت
     if (_isProcessing) return;
+    if (AuthServices.token == null) return; // متشتغلش من غير token
 
     _isProcessing = true;
-
     try {
       await _sosController.retryPendingRequests();
     } finally {

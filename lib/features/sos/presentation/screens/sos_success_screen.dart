@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../models/sos_request_model.dart';
+import '../../services/notification_service.dart';
 import 'bluetooth_search_screen.dart';
 
-class SosSuccessScreen extends StatelessWidget {
+class SosSuccessScreen extends StatefulWidget {
   final String requestId;
   final String status;
-  // FIX: بنقبل الـ request object عشان نبعته للـ BluetoothSearchScreen
   final SosRequestModel? request;
 
   const SosSuccessScreen({
@@ -17,30 +17,55 @@ class SosSuccessScreen extends StatelessWidget {
     this.request,
   });
 
+  @override
+  State<SosSuccessScreen> createState() => _SosSuccessScreenState();
+}
+
+class _SosSuccessScreenState extends State<SosSuccessScreen> {
+  late String _currentStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStatus = widget.status;
+
+
+  }
+
+  @override
+  void dispose() {
+    
+    super.dispose();
+  }
+
   String get statusText {
-    switch (status) {
+    switch (_currentStatus) {
       case 'pending_connection': return 'Pending Connection';
       case 'delivered': return 'Delivered';
+      case 'resolved': return 'Resolved';
       default: return 'Pending Delivery';
     }
   }
 
   String get message {
-    switch (status) {
+    switch (_currentStatus) {
       case 'pending_connection':
         return 'Your request is saved safely.\nIt will be sent automatically once connection is available.';
       case 'delivered':
         return 'Your emergency request has been delivered successfully.\nHelp is on the way. Stay safe.';
+      case 'resolved':
+        return 'Your SOS has been resolved. Stay safe!';
       default:
         return 'Your emergency request has been recorded successfully.';
     }
   }
 
   String get helpText {
-    switch (status) {
+    switch (_currentStatus) {
       case 'pending_connection':
         return 'No internet? You can forward your SOS to a nearby device via Bluetooth Mesh.';
       case 'delivered':
+      case 'resolved':
         return 'Stay calm. Our team has received your request.';
       default:
         return 'Stay calm. Our team has been notified and will reach you as soon as possible.';
@@ -48,9 +73,10 @@ class SosSuccessScreen extends StatelessWidget {
   }
 
   Color get statusColor {
-    switch (status) {
+    switch (_currentStatus) {
       case 'pending_connection': return Colors.red;
-      case 'delivered': return Colors.green;
+      case 'delivered':
+      case 'resolved': return Colors.green;
       default: return Colors.orange;
     }
   }
@@ -85,7 +111,6 @@ class SosSuccessScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 16, height: 1.7, color: AppColors.grey.withOpacity(.95))),
               const SizedBox(height: 30),
 
-              // Request Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -102,13 +127,13 @@ class SosSuccessScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Text("Request ID", style: TextStyle(fontSize: 15, color: AppColors.grey.withOpacity(.9))),
                         const Spacer(),
-                        Text(requestId,
+                        Text(widget.requestId,
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppColors.black)),
                         const SizedBox(width: 6),
                         InkWell(
                           borderRadius: BorderRadius.circular(50),
                           onTap: () async {
-                            await Clipboard.setData(ClipboardData(text: requestId));
+                            await Clipboard.setData(ClipboardData(text: widget.requestId));
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Request ID copied"), duration: Duration(milliseconds: 1200)),
                             );
@@ -129,7 +154,8 @@ class SosSuccessScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Text("Status", style: TextStyle(fontSize: 15, color: AppColors.grey.withOpacity(.9))),
                         const Spacer(),
-                        Container(
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(.12),
@@ -145,15 +171,14 @@ class SosSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Help Box
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: status == 'pending_connection' ? const Color(0xffFFF3E0) : const Color(0xffEAF7EF),
+                  color: _currentStatus == 'pending_connection' ? const Color(0xffFFF3E0) : const Color(0xffEAF7EF),
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: status == 'pending_connection'
+                    color: _currentStatus == 'pending_connection'
                         ? Colors.orange.withOpacity(.25)
                         : Colors.green.withOpacity(.15),
                   ),
@@ -162,8 +187,8 @@ class SosSuccessScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      status == 'pending_connection' ? Icons.wifi_off_rounded : Icons.shield_outlined,
-                      color: status == 'pending_connection' ? Colors.orange : AppColors.primary,
+                      _currentStatus == 'pending_connection' ? Icons.wifi_off_rounded : Icons.shield_outlined,
+                      color: _currentStatus == 'pending_connection' ? Colors.orange : AppColors.primary,
                       size: 30,
                     ),
                     const SizedBox(width: 14),
@@ -172,10 +197,10 @@ class SosSuccessScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            status == 'pending_connection' ? "No Internet Connection" : "Help is on the way.",
+                            _currentStatus == 'pending_connection' ? "No Internet Connection" : "Help is on the way.",
                             style: TextStyle(
                               fontSize: 17, fontWeight: FontWeight.w700,
-                              color: status == 'pending_connection' ? Colors.orange.shade800 : AppColors.primary,
+                              color: _currentStatus == 'pending_connection' ? Colors.orange.shade800 : AppColors.primary,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -189,18 +214,17 @@ class SosSuccessScreen extends StatelessWidget {
               ),
               const Spacer(),
 
-              // FIX: Bluetooth Button — بيبعت الـ request object كمان
               SizedBox(
                 width: double.infinity, height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: status == 'pending_connection'
+                  onPressed: _currentStatus == 'pending_connection'
                       ? () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => BluetoothSearchScreen(
-                                requestId: requestId,
-                                request: request,
+                                requestId: widget.requestId,
+                                request: widget.request,
                                 fromSuccessScreen: true,
                               ),
                             ),
@@ -208,14 +232,14 @@ class SosSuccessScreen extends StatelessWidget {
                         }
                       : null,
                   icon: Icon(Icons.bluetooth_rounded,
-                      color: status == 'pending_connection' ? Colors.white : Colors.white54, size: 22),
+                      color: _currentStatus == 'pending_connection' ? Colors.white : Colors.white54, size: 22),
                   label: Text("Send via Bluetooth Mesh",
                       style: TextStyle(
-                        color: status == 'pending_connection' ? Colors.white : Colors.white54,
+                        color: _currentStatus == 'pending_connection' ? Colors.white : Colors.white54,
                         fontSize: 16, fontWeight: FontWeight.w600,
                       )),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: status == 'pending_connection'
+                    backgroundColor: _currentStatus == 'pending_connection'
                         ? const Color(0xFF1A6B9A)
                         : const Color(0xFF1A6B9A).withOpacity(0.4),
                     elevation: 0,

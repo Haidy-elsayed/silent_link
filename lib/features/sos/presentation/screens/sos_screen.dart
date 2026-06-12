@@ -19,13 +19,14 @@ class SosScreen extends StatefulWidget {
   State<SosScreen> createState() => _SosScreenState();
 }
 
-class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class _SosScreenState extends State<SosScreen>
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
   final LocalDbService _localDb = LocalDbService();
   final BluetoothService _bluetoothService = BluetoothService();
 
-  // FIX: static عشان تفضل في الـ memory حتى لو الـ SosScreen اتعمل dispose
   static List<SosRequestModel> _cachedRequests = [];
   List<SosRequestModel> get _pendingRequests => _cachedRequests;
   Timer? _refreshTimer;
@@ -35,37 +36,26 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadPendingRequests();
-    // FIX: بيعمل refresh كل ثانيتين عشان يلاقي الـ requests الجديدة
     _startPeriodicRefresh();
 
-    // لما يجي SOS عبر Bluetooth → اعرضه فوراً
     _bluetoothService.onSosReceived = (request) {
       if (mounted) _loadPendingRequests();
     };
 
-    // FIX: لما اليوزر يدوس على الـ notification
-    // بيجيلنا الـ createdAt → نجيب الـ request من الـ DB ونفتح الـ details
-    onNotificationOpenRequest = (createdAt) async {
+    NotificationService().onNotificationOpenRequest = (createdAt) async {
       await _loadPendingRequests();
       if (!mounted) return;
 
       SosRequestModel? request;
-
       if (createdAt.isNotEmpty) {
-        // جيب الـ request بالـ createdAt
         request = await _localDb.getRequestByCreatedAt(createdAt);
       }
-
-      // fallback: أحدث request
       request ??= _pendingRequests.isNotEmpty ? _pendingRequests.first : null;
 
       if (request != null && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RequestDetailsScreen(request: request!),
-          ),
-        ).then((_) => _loadPendingRequests());
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => RequestDetailsScreen(request: request!),
+        )).then((_) => _loadPendingRequests());
       }
     };
   }
@@ -73,17 +63,14 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    onNotificationOpenRequest = null;
+    NotificationService().onNotificationOpenRequest = null;
     _refreshTimer?.cancel();
     super.dispose();
   }
 
-  // FIX: لما الأبلكيشن يرجع من الـ background → refresh
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadPendingRequests();
-    }
+    if (state == AppLifecycleState.resumed) _loadPendingRequests();
   }
 
   void _startPeriodicRefresh() {
@@ -95,7 +82,6 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
 
   Future<void> _loadPendingRequests() async {
     final requests = await _localDb.getPendingRequests();
-    // FIX: بنحدث الـ static cache دايماً
     _cachedRequests = requests;
     if (mounted) setState(() {});
   }
@@ -112,15 +98,9 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
       }
     } else {
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BluetoothSearchScreen(
-              requestId: request.sosId,
-              request: request,
-            ),
-          ),
-        ).then((_) => _loadPendingRequests());
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => BluetoothSearchScreen(requestId: request.sosId, request: request),
+        )).then((_) => _loadPendingRequests());
       }
     }
   }
@@ -128,6 +108,7 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -135,54 +116,43 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "SOS",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text("SOS",
+                  style: TextStyle(fontSize: sw * 0.06, fontWeight: FontWeight.w500)),
             ),
             const SizedBox(height: 20),
 
             if (_pendingRequests.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Pending SOS Requests",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text("Pending SOS Requests",
+                    style: TextStyle(fontSize: sw * 0.04, fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _PendingRequestCard(
                   request: _pendingRequests.first,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => RequestDetailsScreen(
-                          request: _pendingRequests.first),
-                    ),
-                  ).then((_) => _loadPendingRequests()),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => RequestDetailsScreen(request: _pendingRequests.first),
+                  )).then((_) => _loadPendingRequests()),
                 ),
               ),
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AllRequestsScreen()),
-                ).then((_) => _loadPendingRequests()),
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AllRequestsScreen()))
+                    .then((_) => _loadPendingRequests()),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text("View all requests",
-                          style:
-                              TextStyle(fontSize: 14, color: AppColors.grey)),
+                          style: TextStyle(fontSize: sw * 0.035, color: AppColors.grey)),
                       const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward,
-                          size: 16, color: AppColors.grey),
+                      Icon(Icons.arrow_forward, size: 16, color: AppColors.grey),
                     ],
                   ),
                 ),
@@ -198,44 +168,34 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.sosShadow.withOpacity(0.5),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(
+                        color: AppColors.sosShadow.withOpacity(0.5),
+                        blurRadius: 10, offset: const Offset(0, 4),
+                      )],
                     ),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.sosRed,
-                          elevation: 0,
+                          backgroundColor: AppColors.sosRed, elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const CreateSosScreen()),
-                        ).then((_) => _loadPendingRequests()),
-                        child: const Text(
-                          "Send SOS",
-                          style: TextStyle(
-                            color: AppColors.textWhite,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const CreateSosScreen()))
+                            .then((_) => _loadPendingRequests()),
+                        child: Text("Send SOS",
+                            style: TextStyle(
+                              color: AppColors.textWhite,
+                              fontSize: sw * 0.05,
+                              fontWeight: FontWeight.bold,
+                            )),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text("Tap in emergency",
-                      style: TextStyle(fontSize: 13, color: AppColors.grey)),
+                      style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey)),
                 ],
               ),
             ),
@@ -246,17 +206,11 @@ class _SosScreenState extends State<SosScreen> with WidgetsBindingObserver, Auto
   }
 }
 
-// ═══════════════════════════════════════
-// Pending Request Card
-// ═══════════════════════════════════════
 class _PendingRequestCard extends StatelessWidget {
   final SosRequestModel request;
   final VoidCallback onTap;
 
-  const _PendingRequestCard({
-    required this.request,
-    required this.onTap,
-  });
+  const _PendingRequestCard({required this.request, required this.onTap});
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -267,6 +221,7 @@ class _PendingRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -275,12 +230,7 @@ class _PendingRequestCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.sosRed.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2)),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,42 +238,32 @@ class _PendingRequestCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: AppColors.sosRed,
-                      borderRadius: BorderRadius.circular(6)),
-                  child: const Text('URGENT',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700)),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: AppColors.sosRed, borderRadius: BorderRadius.circular(6)),
+                  child: Text('URGENT',
+                      style: TextStyle(color: Colors.white, fontSize: sw * 0.027, fontWeight: FontWeight.w700)),
                 ),
                 const SizedBox(width: 8),
                 Text(_timeAgo(request.createdAt),
-                    style: TextStyle(fontSize: 12, color: AppColors.grey)),
+                    style: TextStyle(fontSize: sw * 0.03, color: AppColors.grey)),
                 const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.grey),
+                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.grey),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.notifications_active_rounded,
-                    color: AppColors.sosRed, size: 28),
+                Icon(Icons.notifications_active_rounded, color: AppColors.sosRed, size: 28),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       request.name.isEmpty ? 'Unknown' : request.name,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: sw * 0.04, fontWeight: FontWeight.w600),
                     ),
                     Text(request.injuryType,
-                        style:
-                            TextStyle(fontSize: 13, color: AppColors.grey)),
+                        style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey)),
                   ],
                 ),
               ],
@@ -331,21 +271,19 @@ class _PendingRequestCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.location_on_rounded,
-                    color: AppColors.grey, size: 16),
+                Icon(Icons.location_on_rounded, color: AppColors.grey, size: 16),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     request.locationName.isEmpty
                         ? '${request.latitude.toStringAsFixed(3)}, ${request.longitude.toStringAsFixed(3)}'
                         : request.locationName,
-                    style: TextStyle(fontSize: 13, color: AppColors.grey),
+                    style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-
           ],
         ),
       ),

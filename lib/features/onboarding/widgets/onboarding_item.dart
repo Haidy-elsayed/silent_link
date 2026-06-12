@@ -1,7 +1,11 @@
+
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
+//import '../../../core/constants/colors.dart';
 import '../data/onboarding_model.dart';
+
+
 
 class OnboardingItem extends StatelessWidget {
   final OnboardingModel model;
@@ -87,11 +91,7 @@ class OnboardingItem extends StatelessWidget {
   Widget _title() => Text(
     model.title,
     textAlign: TextAlign.center,
-    style: const TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.bold,
-      color: AppColors.primary,
-    ),
+    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
   );
 
   Widget _subTitle() => Text(
@@ -112,31 +112,25 @@ class OnboardingItem extends StatelessWidget {
         return Container(
           height: height,
           color: Colors.grey[200],
-          child: const Center(
-            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-          ),
+          child: const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey)),
         );
       },
     );
   }
 
   Widget _gridLayout() => GridView.count(
-    shrinkWrap: true,
-    crossAxisCount: 2,
-    mainAxisSpacing: 10,
-    crossAxisSpacing: 10,
-    physics: const NeverScrollableScrollPhysics(),
-    children: model.gridImages!
-        .map(
-          (e) => ClipRRect(
-            borderRadius: BorderRadius.circular(0),
-            child: Image.asset(
-              e,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(color: Colors.grey[300]),
-            ),
-          ),
-        )
-        .toList(),
+      shrinkWrap: true,
+      crossAxisCount: 2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      physics: const NeverScrollableScrollPhysics(),
+      children: model.gridImages!.map((e) => ClipRRect(
+        borderRadius: BorderRadius.circular(0),
+        child: Image.asset(
+            e,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(color: Colors.grey[300]),
+      ),
+      )).toList(),
   );
 }

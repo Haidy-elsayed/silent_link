@@ -1,4 +1,4 @@
-
+/**
 import 'dart:convert';
 import 'package:flutter/services.dart'; // ضروري جداً لقراءة ملف الـ JSON من الـ assets
 import 'package:http/http.dart' as http;
@@ -68,6 +68,151 @@ class GeminiService {
     } catch (e) {
       // في حال حدث خطأ تقني في قراءة ملف الـ JSON نفسه
       return "Connection error and local database is unavailable. Please check your network.";
+    }
+  }
+}
+
+**/
+
+import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+
+class GeminiService {
+  /// API KEY
+  final String _apiKey ="AIzaSyBodkgWG4JxIZ2lILYmT77iXsYXrm-vSWQ";
+
+  /// Gemini API URL
+  final String _url =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+  Future<String> getResponse(
+      String userInput) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          "$_url?key=$_apiKey",
+        ),
+
+        headers: {
+          'Content-Type':
+          'application/json',
+        },
+
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text":
+                  "You are a professional First Aid Assistant. "
+                      "Provide concise, step-by-step guidance. "
+                      "If the case is critical, always start by advising to call emergency services. "
+                      "Respond ONLY in the same language used by the user."
+                },
+
+                {
+                  "text": userInput
+                }
+              ]
+            }
+          ]
+        }),
+      );
+
+      /// DEBUG PRINTS
+      print(
+          "Status Code: ${response.statusCode}");
+      print(
+          "Response Body: ${response.body}");
+
+      /// SUCCESS
+      if (response.statusCode ==
+          200) {
+        final data =
+        jsonDecode(response.body);
+
+        if (data['candidates'] !=
+            null &&
+            data['candidates']
+                .isNotEmpty) {
+          return data[
+          'candidates'][0]
+          ['content']['parts']
+          [0]['text'];
+        }
+
+        return await _getOfflineResponse(
+          userInput,
+        );
+      }
+
+      /// API FAILED
+      print(
+          "Gemini API Failed");
+
+      return await _getOfflineResponse(
+        userInput,
+      );
+    } catch (e) {
+      /// CONNECTION ERROR
+      print(
+          "Gemini Error: $e");
+
+      return await _getOfflineResponse(
+        userInput,
+      );
+    }
+  }
+
+  /// OFFLINE MODE
+  Future<String>
+  _getOfflineResponse(
+      String userInput,
+      ) async {
+    try {
+      final String jsonString =
+      await rootBundle.loadString(
+        'assets/first_aid_data.json',
+      );
+
+      final Map<String, dynamic>
+      data = jsonDecode(
+        jsonString,
+      );
+
+      final List cases =
+      data['cases'];
+
+      String inputLower =
+      userInput
+          .toLowerCase()
+          .trim();
+
+      for (var item in cases) {
+        List keywords =
+        item['keywords'];
+
+        bool found = keywords.any(
+              (key) => inputLower
+              .contains(
+            key
+                .toLowerCase(),
+          ),
+        );
+
+        if (found) {
+          return item[
+          'response'];
+        }
+      }
+
+      return "No internet connection and this specific case is not available in the local database.";
+    } catch (e) {
+      print(
+          "Offline JSON Error: $e");
+
+      return "Connection error and local database unavailable.";
     }
   }
 }

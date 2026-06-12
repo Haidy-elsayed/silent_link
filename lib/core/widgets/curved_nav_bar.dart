@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../constants/app_icons.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_icons.dart';
+
 
 class CustomCurvedNavBar extends StatelessWidget {
   final int currentIndex;

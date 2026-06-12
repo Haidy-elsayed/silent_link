@@ -5,6 +5,7 @@ class SosRequestModel {
 
   // Backend fields (PascalCase in JSON)
   final String? sosId; // nullable — الـ backend هو اللي بيبعته في الـ Response
+  final String? clientRequestId; // ثابت لكل request عشان يمنع التكرار
   final String emergencyType;
   final String injuryType;
   final String state;
@@ -24,6 +25,7 @@ class SosRequestModel {
 
   const SosRequestModel({
     this.sosId,
+    this.clientRequestId,
     required this.emergencyType,
     required this.injuryType,
     required this.state,
@@ -46,6 +48,7 @@ class SosRequestModel {
   factory SosRequestModel.empty() {
     return SosRequestModel(
       sosId: null,
+      clientRequestId: null,
       emergencyType: '',
       injuryType: '',
       state: 'pending',
@@ -68,6 +71,7 @@ class SosRequestModel {
   // ===========================
   SosRequestModel copyWith({
     String? sosId,
+    String? clientRequestId,
     String? emergencyType,
     String? injuryType,
     String? state,
@@ -85,6 +89,7 @@ class SosRequestModel {
   }) {
     return SosRequestModel(
       sosId: sosId ?? this.sosId,
+      clientRequestId: clientRequestId ?? this.clientRequestId,
       emergencyType: emergencyType ?? this.emergencyType,
       injuryType: injuryType ?? this.injuryType,
       state: state ?? this.state,
@@ -111,8 +116,8 @@ class SosRequestModel {
     final parts = name.trim().split(' ');
     final firstName = parts.isNotEmpty ? parts.first : '';
     final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-    // clientRequestId — local ID بنبعته للـ backend عشان يعرف لو اتبعت قبل كده
-    final clientRequestId = sosId ?? createdAt.millisecondsSinceEpoch.toString();
+    // clientRequestId — ثابت لكل request، لو مش موجود نولده من الـ createdAt
+    final clientReqId = clientRequestId ?? createdAt.millisecondsSinceEpoch.toString();
 
     return {
       "firstName": firstName,
@@ -123,7 +128,25 @@ class SosRequestModel {
       "emergencyType": emergencyType,
       "injuryType": injuryType,
       "severity": severity,
-      "clientRequestId": clientRequestId,
+      "clientRequestId": clientReqId,
+    };
+  }
+
+  // toBluetoothJson — بيبعت كل البيانات عبر Bluetooth
+  Map<String, dynamic> toBluetoothJson() {
+    return {
+      "sosId": sosId,
+      "emergencyType": emergencyType,
+      "injuryType": injuryType,
+      "state": state,
+      "severity": severity,
+      "latitude": latitude,
+      "longitude": longitude,
+      "locationName": locationName,
+      "name": name,
+      "phone": phone,
+      "deliveryMethod": deliveryMethod,
+      "createdAt": createdAt.toIso8601String(),
     };
   }
 
@@ -131,24 +154,33 @@ class SosRequestModel {
   // fromJson — بيستلم SosId من الـ backend
   // ===========================
   factory SosRequestModel.fromJson(Map<String, dynamic> json) {
+    // بيقبل PascalCase من الـ backend وcamelCase من الـ Bluetooth
+    String get(String pascal, String camel) =>
+        (json[pascal] ?? json[camel] ?? '').toString();
+
     return SosRequestModel(
-      sosId: json["SosId"],
-      emergencyType: json["EmergencyType"] ?? '',
-      injuryType: json["InjuryType"] ?? '',
-      state: json["State"] ?? 'pending',
-      severity: json["Severity"] ?? '',
-      latitude: (json["Latitude"] ?? 0).toDouble(),
-      longitude: (json["Longitude"] ?? 0).toDouble(),
-      locationName: json["LocationName"] ?? '',
-      organization: json["Organization"] ?? '',
-      country: json["Country"] ?? '',
-      requestedByUserId: json["RequestedByUserId"] ?? '',
-      name: json["Name"] ?? '',
-      phone: json["Phone"] ?? '',
-      deliveryMethod: json["DeliveryMethod"] ?? 'local',
-      createdAt: DateTime.parse(
-        json["CreatedAt"] ?? DateTime.now().toIso8601String(),
-      ),
+      sosId: json["SosId"]?.toString() ?? json["sosId"]?.toString(),
+      emergencyType: get("EmergencyType", "emergencyType"),
+      injuryType: get("InjuryType", "injuryType"),
+      state: get("State", "state").isEmpty ? 'pending' : get("State", "state"),
+      severity: get("Severity", "severity"),
+      latitude: ((json["Latitude"] ?? json["latitude"]) ?? 0).toDouble(),
+      longitude: ((json["Longitude"] ?? json["longitude"]) ?? 0).toDouble(),
+      locationName: get("LocationName", "locationName"),
+      organization: get("Organization", "organization"),
+      country: get("Country", "country"),
+      requestedByUserId: get("RequestedByUserId", "requestedByUserId"),
+      name: get("Name", "name"),
+      phone: get("Phone", "phone"),
+      deliveryMethod: get("DeliveryMethod", "deliveryMethod").isEmpty
+          ? 'local'
+          : get("DeliveryMethod", "deliveryMethod"),
+      createdAt: DateTime.tryParse(
+            json["CreatedAt"]?.toString() ??
+                json["createdAt"]?.toString() ??
+                '',
+          ) ??
+          DateTime.now(),
     );
   }
 }

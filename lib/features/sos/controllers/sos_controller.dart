@@ -1,6 +1,5 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/sos_request_model.dart';
+import '../services/sos_api_service.dart';
 import '../services/notification_service.dart';
 import '../services/bluetooth_service.dart';
 import '../services/network_service.dart';
@@ -9,6 +8,7 @@ import '../services/local_db_service.dart';
 class SosController {
   final NetworkService _networkService = NetworkService();
   final LocalDbService _localDb = LocalDbService();
+  final SosApiService _api = SosApiService();
 
   Future<Map<String, dynamic>> submit(SosRequestModel request) async {
     final now = DateTime.now();
@@ -16,20 +16,31 @@ class SosController {
     final state = hasInternet ? 'pending' : 'pending_connection';
     final deliveryMethod = hasInternet ? 'internet' : 'local';
 
+    // نولد الـ clientRequestId مرة واحدة وبيفضل ثابت في كل retry
+    final clientRequestId = request.clientRequestId ?? now.millisecondsSinceEpoch.toString();
+
     final finalRequest = request.copyWith(
       createdAt: now,
       state: state,
       deliveryMethod: deliveryMethod,
+      clientRequestId: clientRequestId,
     );
 
     if (hasInternet) {
-      final result = await _trySendToServer(finalRequest);
+      final result = await _api.submitSos(finalRequest);
       if (result != null) {
+        // نحفظ الـ request بـ state = sent عشان الـ queue ميبعتهوش تاني
         final savedRequest = finalRequest.copyWith(
           sosId: result['SosId'],
-          state: result['State'] ?? state,
+          state: 'sent',
         );
         await _localDb.insertSosRequest(savedRequest);
+
+        if (result['SosId'] != null) {
+          await NotificationService().trackSosId(result['SosId']!);
+          NotificationService().startPolling();
+        }
+
         return {
           "sosId": result['SosId'],
           "state": result['State'] ?? state,
@@ -38,75 +49,59 @@ class SosController {
       }
     }
 
-    final localSosId =
-        'SOS-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    final requestWithId = finalRequest.copyWith(sosId: localSosId);
-    await _localDb.insertSosRequest(requestWithId);
-
+    // مفيش نت أو فشل → حفظ محلياً بدون sosId
+    await _localDb.insertSosRequest(finalRequest);
     return {
-      "sosId": localSosId,
+      "sosId": null,
       "state": state,
       "deliveryMethod": deliveryMethod,
     };
-  }
-
-  static const String _baseUrl = 'https://silentlink.runasp.net';
-
-  Future<Map<String, dynamic>?> _trySendToServer(
-      SosRequestModel request) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/App/SOS'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(request.toJson()),
-      ).timeout(const Duration(seconds: 15));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        // sosId بيجي integer من الـ backend
-        final sosId = data['sosId']?.toString() ??
-            data['SosId']?.toString() ??
-            data['id']?.toString();
-        // state بيجي بـ Capital — بنحولها lowercase
-        final state = (data['state'] ?? data['State'] ?? 'pending')
-            .toString()
-            .toLowerCase();
-
-        // ابدأ tracking الـ sosId
-        if (sosId != null) {
-          await NotificationService().trackSosId(sosId);
-          NotificationService().startPolling();
-        }
-
-        return {'SosId': sosId, 'State': state};
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
   }
 
   Future<void> retryPendingRequests() async {
     final hasInternet = await _networkService.isConnected();
 
     if (hasInternet) {
-      // FIX: بنبعت بس الـ requests بتاعت الجهاز نفسه
-      // مش الـ received_bluetooth لأنها بتاعت حد تاني
-      // الـ received_bluetooth بيبعتها صاحبها بنفسه لما يدوس Forward
       final myRequests = await _localDb.getMyPendingRequests();
-
       for (final request in myRequests) {
-        final res = await _trySendToServer(request);
-        if (res != null) {
+        final result = await _api.submitSos(request);
+        if (result != null && result['SosId'] != null) {
           await _localDb.updateSosId(
             request.createdAt.toIso8601String(),
-            res['SosId'],
+            result['SosId'],
           );
-          await _localDb.updateState(res['SosId'], 'delivered');
+          await _localDb.updateState(result['SosId'], 'sent');
+          await NotificationService().trackSosId(result['SosId']!);
+          NotificationService().startPolling();
+        }
+      }
+
+      // received bluetooth requests
+      final receivedBt = await _localDb.getReceivedBluetoothRequests();
+      for (final request in receivedBt) {
+        final result = await _api.submitSos(request);
+        if (result != null && result['SosId'] != null) {
+          await _localDb.updateSosId(
+            request.createdAt.toIso8601String(),
+            result['SosId'],
+          );
+          await _localDb.updateState(result['SosId'], 'delivered');
+          await NotificationService().trackSosId(result['SosId']!);
+          NotificationService().startPolling();
+
+          final btService = BluetoothService();
+          if (btService.hasDevices) {
+            for (final endpointId in btService.discoveredDevices.keys) {
+              await btService.sendSosIdResponse(
+                endpointId,
+                result['SosId']!,
+                result['State'] ?? 'pending',
+              );
+            }
+          }
         }
       }
     } else {
-      // مفيش نت → auto-forward عبر Bluetooth
       final received = await _localDb.getReceivedBluetoothRequests();
       if (received.isNotEmpty) {
         final bluetoothService = BluetoothService();

@@ -3,18 +3,12 @@ import 'package:path/path.dart';
 import '../models/sos_request_model.dart';
 
 class LocalDbService {
-  // ===========================
-  // Singleton Pattern
-  // ===========================
   static final LocalDbService _instance = LocalDbService._internal();
   factory LocalDbService() => _instance;
   LocalDbService._internal();
 
   static Database? _db;
 
-  // ===========================
-  // DB Init
-  // ===========================
   Future<Database> get database async {
     if (_db != null) return _db!;
     _db = await _initDb();
@@ -27,11 +21,20 @@ class LocalDbService {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4, // ⬆️ رفعنا الـ version
       onCreate: _createTable,
       onUpgrade: (db, oldVersion, newVersion) async {
-        await db.execute('DROP TABLE IF EXISTS sos_requests');
-        await _createTable(db, newVersion);
+        if (oldVersion < 4) {
+          // FIX: بدل ما نعمل DROP ونخسر الداتا
+          // بنضيف الـ column الناقصة بس
+          try {
+            await db.execute(
+              'ALTER TABLE sos_requests ADD COLUMN ClientRequestId TEXT',
+            );
+          } catch (_) {
+            // لو الـ column موجودة أصلاً → ignore
+          }
+        }
       },
     );
   }
@@ -53,7 +56,8 @@ class LocalDbService {
         Name TEXT NOT NULL,
         Phone TEXT NOT NULL,
         DeliveryMethod TEXT NOT NULL,
-        CreatedAt TEXT NOT NULL PRIMARY KEY
+        CreatedAt TEXT NOT NULL PRIMARY KEY,
+        ClientRequestId TEXT
       )
     ''');
   }
@@ -73,8 +77,6 @@ class LocalDbService {
   // ===========================
   // READ
   // ===========================
-
-  // FIX: توحيد الـ column name — كل الـ queries بتستخدم Capital S في State
   Future<SosRequestModel?> getLatestPendingRequest() async {
     final db = await database;
     final result = await db.query(
@@ -98,8 +100,6 @@ class LocalDbService {
     return result.map((row) => _fromMap(row)).toList();
   }
 
-  // FIX: بيجيب بس الـ requests بتاعت الجهاز نفسه
-  // مش الـ received_bluetooth اللي جات من جهاز تاني
   Future<List<SosRequestModel>> getMyPendingRequests() async {
     final db = await database;
     final result = await db.query(
@@ -115,8 +115,6 @@ class LocalDbService {
     final db = await database;
     final result = await db.query(
       'sos_requests',
-      // يظهر: pending, pending_connection, received_bluetooth
-      // يختفي لما: assisted, forwarded_bluetooth, delivered
       where: 'State = ? OR State = ? OR State = ?',
       whereArgs: ['pending', 'pending_connection', 'received_bluetooth'],
       orderBy: 'CreatedAt DESC',
@@ -145,8 +143,6 @@ class LocalDbService {
     return _fromMap(result.first);
   }
 
-  // FIX: جيب الـ request بالـ CreatedAt (Primary Key)
-  // مفيد لو sosId لسه null (قبل ما يرد الـ backend)
   Future<SosRequestModel?> getRequestByCreatedAt(String createdAt) async {
     final db = await database;
     final result = await db.query(
@@ -162,7 +158,6 @@ class LocalDbService {
   // ===========================
   // UPDATE
   // ===========================
-
   Future<void> updateSosId(String createdAt, String sosId) async {
     final db = await database;
     await db.update(
@@ -183,7 +178,6 @@ class LocalDbService {
     );
   }
 
-  // FIX: fallback لو sosId = null → بيستخدم CreatedAt
   Future<void> updateStateBySosIdOrCreatedAt({
     required String? sosId,
     required String createdAt,
@@ -258,6 +252,7 @@ class LocalDbService {
       'Phone': r.phone,
       'DeliveryMethod': r.deliveryMethod,
       'CreatedAt': r.createdAt.toIso8601String(),
+      'ClientRequestId': r.clientRequestId,
     };
   }
 
@@ -278,6 +273,7 @@ class LocalDbService {
       phone: map['Phone'],
       deliveryMethod: map['DeliveryMethod'],
       createdAt: DateTime.parse(map['CreatedAt']),
+      clientRequestId: map['ClientRequestId']?.toString(),
     );
   }
 }

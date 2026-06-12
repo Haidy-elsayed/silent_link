@@ -59,15 +59,13 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──
-            _buildHeader(context),
-
-            // ── Tabs ──
+            _buildHeader(context, sw),
             Container(
               color: Colors.white,
               child: TabBar(
@@ -76,8 +74,8 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
                 unselectedLabelColor: AppColors.grey,
                 indicatorColor: AppColors.primary,
                 indicatorWeight: 2.5,
-                labelStyle: const TextStyle(
-                  fontSize: 14,
+                labelStyle: TextStyle(
+                  fontSize: sw * 0.035,
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: const [
@@ -86,16 +84,14 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
                 ],
               ),
             ),
-
-            // ── Content ──
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildAllRequestsTab(),
-                        _buildHistoryTab(),
+                        _buildAllRequestsTab(sw),
+                        _buildHistoryTab(sw),
                       ],
                     ),
             ),
@@ -105,8 +101,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
     );
   }
 
-  // ─── Header ───
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, double sw) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       color: Colors.white,
@@ -125,19 +120,18 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'SOS',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: sw * 0.05, fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
   }
 
-  // ─── All Requests Tab ───
-  Widget _buildAllRequestsTab() {
+  Widget _buildAllRequestsTab(double sw) {
     if (_pendingRequests.isEmpty) {
-      return _buildEmptyState('No active requests');
+      return _buildEmptyState('No active requests', sw);
     }
 
     return RefreshIndicator(
@@ -163,12 +157,10 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
     );
   }
 
-  // ─── History Tab ───
-  Widget _buildHistoryTab() {
+  Widget _buildHistoryTab(double sw) {
     if (_historyRequests.isEmpty) {
-      // لو مفيش delivered → اعرض كل الطلبات كـ history
       final history = _allRequests;
-      if (history.isEmpty) return _buildEmptyState('No history yet');
+      if (history.isEmpty) return _buildEmptyState('No history yet', sw);
 
       return ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -188,7 +180,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, double sw) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -197,7 +189,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
           const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(fontSize: 15, color: AppColors.grey),
+            style: TextStyle(fontSize: sw * 0.037, color: AppColors.grey),
           ),
         ],
       ),
@@ -205,9 +197,6 @@ class _AllRequestsScreenState extends State<AllRequestsScreen>
   }
 }
 
-// ═══════════════════════════════════════
-// Request Card (All Requests tab)
-// ═══════════════════════════════════════
 Future<void> _handleForward(BuildContext context, SosRequestModel request) async {
   final hasInternet = await NetworkService().isConnected();
   if (hasInternet) {
@@ -240,6 +229,7 @@ class _RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -258,7 +248,6 @@ class _RequestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Badge + Time
           Row(
             children: [
               Container(
@@ -267,66 +256,60 @@ class _RequestCard extends StatelessWidget {
                   color: AppColors.sosRed,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
+                child: Text(
                   'URGENT',
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 11,
+                      fontSize: sw * 0.027,
                       fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 _timeAgo(request.createdAt),
-                style: TextStyle(fontSize: 12, color: AppColors.grey),
+                style: TextStyle(fontSize: sw * 0.03, color: AppColors.grey),
               ),
             ],
           ),
           const SizedBox(height: 10),
-
-          // Name + Injury
           Row(
             children: [
               Icon(Icons.notifications_active_rounded,
-                  color: AppColors.sosRed, size: 28),
+                  color: AppColors.sosRed, size: sw * 0.07),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     request.name.isEmpty ? 'Unknown' : request.name,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: sw * 0.037, fontWeight: FontWeight.w600),
                   ),
                   Text(
                     request.injuryType,
-                    style: TextStyle(fontSize: 13, color: AppColors.grey),
+                    style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey),
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 8),
-
-          // Location
           Row(
             children: [
-              Icon(Icons.location_on_rounded, color: AppColors.grey, size: 16),
+              Icon(Icons.location_on_rounded, color: AppColors.grey, size: sw * 0.04),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   request.locationName.isEmpty
                       ? '${request.latitude.toStringAsFixed(3)}, ${request.longitude.toStringAsFixed(3)}'
                       : request.locationName,
-                  style: TextStyle(fontSize: 13, color: AppColors.grey),
+                  style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-
-          // Buttons
           Row(
             children: [
               Expanded(
@@ -339,12 +322,12 @@ class _RequestCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Assist Now',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        fontSize: 14),
+                        fontSize: sw * 0.035),
                   ),
                 ),
               ),
@@ -359,12 +342,12 @@ class _RequestCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Forward Request',
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        fontSize: 14),
+                        fontSize: sw * 0.035),
                   ),
                 ),
               ),
@@ -376,9 +359,6 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════
-// History Card (SOS History tab)
-// ═══════════════════════════════════════
 class _HistoryCard extends StatelessWidget {
   final SosRequestModel request;
 
@@ -397,6 +377,7 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -420,13 +401,13 @@ class _HistoryCard extends StatelessWidget {
               children: [
                 Text(
                   'SOS Id: ${request.sosId ?? 'N/A'}',
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: sw * 0.035, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Injury: ${request.injuryType}',
-                  style: TextStyle(fontSize: 13, color: AppColors.grey),
+                  style: TextStyle(fontSize: sw * 0.032, color: AppColors.grey),
                 ),
               ],
             ),
@@ -434,7 +415,7 @@ class _HistoryCard extends StatelessWidget {
           Text(
             _formatDate(request.createdAt),
             textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 12, color: AppColors.grey, height: 1.5),
+            style: TextStyle(fontSize: sw * 0.03, color: AppColors.grey, height: 1.5),
           ),
         ],
       ),

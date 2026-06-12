@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../core/storage/app_statement_manager.dart';
-import '../auth/sign_in_screen.dart';
-import '../home/home_screen.dart';
-import '../onboarding/onboarding_screen.dart';
-import '../permission/pirmission_screen.dart';
+
+import 'package:silent_link/core/storage/app_statement_manager.dart';
+import 'package:silent_link/core/navigation/main_navigation_screen.dart';
+import 'package:silent_link/features/auth/sign_in_screen.dart';
+import 'package:silent_link/features/onboarding/onboarding_screen.dart';
+import 'package:silent_link/features/permission/pirmission_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,37 +21,47 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _decideRoute() async {
-    // فقط أثناء التطوير:*******************************
+    //**********
     final logged = false;
-    final permissions = false;
+    final permissions =false;
     final seen = false;
-    //*************************
+    //*********
     //final seen = await AppStateManager.isOnboardingSeen();
+
     //final permissions = await AppStateManager.isPermissionsGranted();
+
     //final logged = await AppStateManager.isLoggedIn();
 
     await Future.delayed(const Duration(seconds: 2));
+
     if (!mounted) return;
 
+    /// أول مرة
     if (!seen) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingPage()),
       );
-    } else if (!permissions) {
+    }
+    /// permissions
+    else if (!permissions) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const PermissionsPage()),
       );
-    } else if (logged) {
+    }
+    /// logged in
+    else if (logged) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       );
-    } else {
+    }
+    /// مش عامل login
+    else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const SignInPage()),
+        MaterialPageRoute(builder: (_) => const SignInScreen()),
       );
     }
   }
@@ -60,18 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
-        children: [
-          // صورة الخلفية تغطي كل الشاشة
-          Image.asset('assets/images/splash.png', fit: BoxFit.cover),
-          // اللوجو في النص (اختياري)
-          // Center(
-          //child: Image.asset(
-          //'assets/images/logo.png',
-          // width: 120,
-          // height: 120,
-          // ),
-          //),
-        ],
+        children: [Image.asset('assets/images/splash3.png', fit: BoxFit.cover)],
       ),
     );
   }
