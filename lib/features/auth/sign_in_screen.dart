@@ -477,16 +477,334 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 } **/
+//كود هايدي 
+// import 'package:flutter/material.dart';
+// import 'package:silent_link/features/auth/presentation/widgets/social_buttons.dart';
+// import 'package:silent_link/features/auth/sign_up_screen.dart';
+
+// import '../../../../core/widgets/custom_text_field.dart';
+// import '../../../../core/widgets/primary_button.dart';
+// import '../../../../core/widgets/toggle_bar.dart';
+// import '../../core/constants/app_colors.dart';
+// import '../../core/storage/app_statement_manager.dart';
+// import '../../navigation/main_navigation_screen.dart';
+// import '../home/home_screen.dart';
+// import 'forgot_password_screen.dart';
+// import 'service/auth_service.dart';
+
+// class SignInScreen extends StatefulWidget {
+//   const SignInScreen({super.key});
+
+//   @override
+//   State<SignInScreen> createState() => _SignInScreenState();
+// }
+
+// class _SignInScreenState extends State<SignInScreen> {
+//   bool _obscure = true;
+//   bool _isLoading = false;
+
+//   final _formKey = GlobalKey<FormState>();
+
+//   final _emailController = TextEditingController();
+//   final _passController = TextEditingController();
+
+//   final _emailFocus = FocusNode();
+//   final _passFocus = FocusNode();
+
+//   @override
+//   void dispose() {
+//     _emailController.dispose();
+//     _passController.dispose();
+//     _emailFocus.dispose();
+//     _passFocus.dispose();
+//     super.dispose();
+//   }
+
+//   Future<void> _handleSignIn() async {
+//     if (!_formKey.currentState!.validate()) return;
+
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     try {
+//       final result = await AuthServices.signIn(
+//         email: _emailController.text.trim(),
+//         password: _passController.text.trim(),
+//       );
+//       await AppStateManager.setLoggedIn();
+//       print(result);
+
+//       if (!mounted) return;
+
+//       /// نجاح تسجيل الدخول
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             result["message"] ?? "Login successful",
+//           ),
+//         ),
+//       );
+
+//       Navigator.pushAndRemoveUntil(
+//         context,
+//         MaterialPageRoute(
+//           builder: (_) => const MainNavigationScreen(),
+//         ),
+//             (route) => false,
+//       );
+//     } catch (e) {
+//       if (!mounted) return;
+
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             e.toString().replaceAll("Exception: ", ""),
+//           ),
+//         ),
+//       );
+//     } finally {
+//       if (mounted) {
+//         setState(() {
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: AppColors.background,
+
+//       appBar: AppBar(
+//         backgroundColor: AppColors.background,
+//         elevation: 0,
+//         leading: const BackButton(
+//           color: AppColors.primary,
+//         ),
+//       ),
+
+//       body: Padding(
+//         padding: const EdgeInsets.all(20),
+
+//         child: SingleChildScrollView(
+//           child: Form(
+//             key: _formKey,
+
+//             child: Column(
+//               children: [
+//                 const SizedBox(height: 20),
+
+//                 const Text(
+//                   "Welcome Back",
+//                   style: TextStyle(
+//                     fontSize: 24,
+//                     fontWeight: FontWeight.bold,
+//                     color: AppColors.primary,
+//                   ),
+//                 ),
+
+//                 const SizedBox(height: 5),
+
+//                 const Text(
+//                   "Please Sign In To Your Account",
+//                   style: TextStyle(fontSize: 16),
+//                 ),
+
+//                 const SizedBox(height: 40),
+
+//                 /// TOGGLE
+//                 AuthToggleBar(
+//                   isSignIn: true,
+//                   onToggle: () {
+//                     Navigator.pushReplacement(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (_) =>
+//                         const SignUpScreen(),
+//                       ),
+//                     );
+//                   },
+//                 ),
+
+//                 const SizedBox(height: 30),
+
+//                 /// EMAIL
+//                 CustomTextField(
+//                   hint: "Enter Email",
+//                   prefixIcon: Icons.email_outlined,
+//                   controller: _emailController,
+//                   focusNode: _emailFocus,
+//                   nextFocus: _passFocus,
+//                   keyboardType:
+//                   TextInputType.emailAddress,
+//                   textInputAction:
+//                   TextInputAction.next,
+
+//                   validator: (value) {
+//                     if (value == null ||
+//                         value.trim().isEmpty) {
+//                       return "Email is required";
+//                     }
+
+//                     final emailRegex = RegExp(
+//                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+//                     );
+
+//                     if (!emailRegex
+//                         .hasMatch(value.trim())) {
+//                       return "Enter valid email";
+//                     }
+
+//                     return null;
+//                   },
+//                 ),
+
+//                 const SizedBox(height: 15),
+
+//                 /// PASSWORD
+//                 CustomTextField(
+//                   hint: "Password",
+//                   prefixIcon: Icons.lock_outline,
+//                   controller: _passController,
+//                   focusNode: _passFocus,
+//                   obscure: _obscure,
+//                   textInputAction:
+//                   TextInputAction.done,
+
+//                   suffixIcon: _obscure
+//                       ? Icons.visibility_off
+//                       : Icons.visibility,
+
+//                   onSuffixPressed: () {
+//                     setState(() {
+//                       _obscure = !_obscure;
+//                     });
+//                   },
+
+//                   validator: (value) {
+//                     if (value == null ||
+//                         value.trim().isEmpty) {
+//                       return "Password is required";
+//                     }
+
+//                     if (value.length < 6) {
+//                       return "Minimum 6 characters";
+//                     }
+
+//                     return null;
+//                   },
+//                 ),
+
+//                 const SizedBox(height: 8),
+
+//                 /// FORGET PASSWORD
+//                 Align(
+//                   alignment: Alignment.centerRight,
+//                   child: GestureDetector(
+//                     onTap: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (_) =>
+//                           const ForgotPasswordScreen(),
+//                         ),
+//                       );
+//                     },
+//                     child: const Text(
+//                       "Forget Password?",
+//                       style: TextStyle(
+//                         fontWeight:
+//                         FontWeight.bold,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+
+//                 const SizedBox(height: 35),
+
+//                 /// SIGN IN BUTTON
+//                 PrimaryButton(
+//                   text: _isLoading
+//                       ? "Loading..."
+//                       : "Sign In",
+
+//                   onPressed:
+//                   _isLoading
+//                       ? null
+//                       : _handleSignIn,
+//                 ),
+
+//                 const SizedBox(height: 20),
+
+//                 Row(
+//                   children: const [
+//                     Expanded(child: Divider()),
+//                     Text(" OR "),
+//                     Expanded(child: Divider()),
+//                   ],
+//                 ),
+
+//                 const SizedBox(height: 20),
+
+//                 const SocialButtons(),
+
+//                 const SizedBox(height: 20),
+
+//                 /// GO TO SIGN UP
+//                 Row(
+//                   mainAxisAlignment:
+//                   MainAxisAlignment.center,
+//                   children: [
+//                     const Text(
+//                       "Don't Have An Account? ",
+//                     ),
+
+//                     GestureDetector(
+//                       onTap: () {
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (_) =>
+//                             const SignUpScreen(),
+//                           ),
+//                         );
+//                       },
+
+//                       child: const Text(
+//                         "Sign Up",
+//                         style: TextStyle(
+//                           color:
+//                           AppColors.primary,
+//                           fontWeight:
+//                           FontWeight.bold,
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:silent_link/features/auth/presentation/widgets/social_buttons.dart';
 import 'package:silent_link/features/auth/sign_up_screen.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/toggle_bar.dart';
+import '../../../../providers/user_provider.dart';
+import 'widgets/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/storage/app_statement_manager.dart';
-import '../../navigation/main_navigation_screen.dart';
+import '../../core/navigation/main_navigation_screen.dart';
 import '../home/home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'service/auth_service.dart';
@@ -496,6 +814,10 @@ class SignInScreen extends StatefulWidget {
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _Theme {
+  // كود داخلي للمحافظة على بنية الصفحة
 }
 
 class _SignInScreenState extends State<SignInScreen> {
@@ -531,12 +853,20 @@ class _SignInScreenState extends State<SignInScreen> {
         email: _emailController.text.trim(),
         password: _passController.text.trim(),
       );
-      await AppStateManager.setLoggedIn();
-      print(result);
+
+      String? token = result["token"] ?? result["data"]?["token"];
 
       if (!mounted) return;
 
-      /// نجاح تسجيل الدخول
+      if (token != null && token.isNotEmpty) {
+        Provider.of<AuthProvider>(context, listen: false).setToken(token);
+        await Provider.of<UserProvider>(context, listen: false).fetchUserData(token);
+      }
+
+      await AppStateManager.setLoggedIn();
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -550,7 +880,7 @@ class _SignInScreenState extends State<SignInScreen> {
         MaterialPageRoute(
           builder: (_) => const MainNavigationScreen(),
         ),
-            (route) => false,
+        (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
@@ -575,7 +905,6 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -583,18 +912,14 @@ class _SignInScreenState extends State<SignInScreen> {
           color: AppColors.primary,
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
-
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
-
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
                 const Text(
                   "Welcome Back",
                   style: TextStyle(
@@ -603,102 +928,70 @@ class _SignInScreenState extends State<SignInScreen> {
                     color: AppColors.primary,
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 const Text(
                   "Please Sign In To Your Account",
                   style: TextStyle(fontSize: 16),
                 ),
-
                 const SizedBox(height: 40),
-
-                /// TOGGLE
                 AuthToggleBar(
                   isSignIn: true,
                   onToggle: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                        const SignUpScreen(),
+                        builder: (_) => const SignUpScreen(),
                       ),
                     );
                   },
                 ),
-
                 const SizedBox(height: 30),
-
-                /// EMAIL
                 CustomTextField(
                   hint: "Enter Email",
                   prefixIcon: Icons.email_outlined,
                   controller: _emailController,
                   focusNode: _emailFocus,
                   nextFocus: _passFocus,
-                  keyboardType:
-                  TextInputType.emailAddress,
-                  textInputAction:
-                  TextInputAction.next,
-
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return "Email is required";
                     }
-
                     final emailRegex = RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     );
-
-                    if (!emailRegex
-                        .hasMatch(value.trim())) {
+                    if (!emailRegex.hasMatch(value.trim())) {
                       return "Enter valid email";
                     }
-
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 15),
-
-                /// PASSWORD
                 CustomTextField(
                   hint: "Password",
                   prefixIcon: Icons.lock_outline,
                   controller: _passController,
                   focusNode: _passFocus,
                   obscure: _obscure,
-                  textInputAction:
-                  TextInputAction.done,
-
-                  suffixIcon: _obscure
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-
+                  textInputAction: TextInputAction.done,
+                  suffixIcon: _obscure ? Icons.visibility_off : Icons.visibility,
                   onSuffixPressed: () {
                     setState(() {
                       _obscure = !_obscure;
                     });
                   },
-
                   validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return "Password is required";
                     }
-
                     if (value.length < 6) {
                       return "Minimum 6 characters";
                     }
-
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 8),
-
-                /// FORGET PASSWORD
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -706,37 +999,24 @@ class _SignInScreenState extends State<SignInScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                          const ForgotPasswordScreen(),
+                          builder: (_) => const ForgotPasswordScreen(),
                         ),
                       );
                     },
                     child: const Text(
                       "Forget Password?",
                       style: TextStyle(
-                        fontWeight:
-                        FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 35),
-
-                /// SIGN IN BUTTON
                 PrimaryButton(
-                  text: _isLoading
-                      ? "Loading..."
-                      : "Sign In",
-
-                  onPressed:
-                  _isLoading
-                      ? null
-                      : _handleSignIn,
+                  text: _isLoading ? "Loading..." : "Sign In",
+                  onPressed: _isLoading ? null : _handleSignIn,
                 ),
-
                 const SizedBox(height: 20),
-
                 Row(
                   children: const [
                     Expanded(child: Divider()),
@@ -744,40 +1024,27 @@ class _SignInScreenState extends State<SignInScreen> {
                     Expanded(child: Divider()),
                   ],
                 ),
-
                 const SizedBox(height: 20),
-
                 const SocialButtons(),
-
                 const SizedBox(height: 20),
-
-                /// GO TO SIGN UP
                 Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "Don't Have An Account? ",
-                    ),
-
+                    const Text("Don't Have An Account? "),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                            const SignUpScreen(),
+                            builder: (_) => const SignUpScreen(),
                           ),
                         );
                       },
-
                       child: const Text(
                         "Sign Up",
                         style: TextStyle(
-                          color:
-                          AppColors.primary,
-                          fontWeight:
-                          FontWeight.bold,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

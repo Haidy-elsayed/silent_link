@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/chat_input.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/message_bubble.dart';
 import 'package:silent_link/features/chat_bot/widget_chat_bot/quick_buttons.dart';
-import 'package:silent_link/navigation/main_navigation_screen.dart';
+import 'package:silent_link/core/navigation/main_navigation_screen.dart';
 import '../../core/constants/app_colors.dart';
 import 'chat_bot_model.dart';
 import 'gemini_service.dart';

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../core/storage/app_statement_manager.dart';
-import '../../navigation/main_navigation_screen.dart';
-import '../auth/sign_in_screen.dart';
-import '../onboarding/onboarding_screen.dart';
-import '../permission/pirmission_screen.dart';
+import 'package:silent_link/core/storage/app_statement_manager.dart';
+import 'package:silent_link/core/navigation/main_navigation_screen.dart';
+import 'package:silent_link/features/auth/sign_in_screen.dart';
+import 'package:silent_link/features/onboarding/onboarding_screen.dart';
+import 'package:silent_link/features/permission/pirmission_screen.dart';
 
-class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
